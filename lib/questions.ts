@@ -177,11 +177,11 @@ export const questions: Question[] = [
     category: "bapd",
     theme: "Réglementation",
     difficulty: "moyen",
-    source: "Règlement (UE) 2019/947, UAS.OPEN.020(5)",
+    source: "Art. 9(1), Règlement (UE) 2019/947",
     question: "Un télépilote en sous-catégorie A1 doit avoir quel âge minimum ?",
     options: ["14 ans", "16 ans", "18 ans", "12 ans avec supervision"],
     answer: 1,
-    explanation: "UAS.OPEN.020(5) : l'âge minimum pour voler en A1 (avec drone C1) est 16 ans. Pour les drones < 250 g (y compris jouets), il n'y a pas d'âge légal minimum au niveau EASA, mais les États peuvent fixer des limites nationales.",
+    explanation: "Art. 9(1) du Règlement (UE) 2019/947 : l'âge minimum pour voler en catégorie Ouverte ou Spécifique est de 16 ans. Exception : aucune limite d'âge pour les drones C0 (< 250 g, jouets) ni pour les drones privés < 250 g, ni pour les vols sous supervision directe d'un télépilote qualifié âgé de 16 ans et plus.",
   },
   {
     id: 12,
@@ -252,11 +252,11 @@ export const questions: Question[] = [
     category: "a2",
     theme: "Réglementation A2",
     difficulty: "facile",
-    source: "Règlement (UE) 2019/947, UAS.OPEN.030(2)(b)",
+    source: "Règlement (UE) 2019/947, Annexe — UAS.OPEN.030(1)",
     question: "En sous-catégorie A2, quelle est la distance minimale par défaut à maintenir par rapport aux personnes non impliquées ?",
     options: ["5 m", "15 m", "30 m", "50 m"],
     answer: 2,
-    explanation: "UAS.OPEN.030(2)(b) : la distance minimale est de 30 m des personnes non impliquées. Elle peut être réduite à 5 m si le drone est équipé d'un mode Low Speed (vitesse horizontale ≤ 3 m/s) ET que ce mode est activé.",
+    explanation: "UAS.OPEN.030(1), Règlement (UE) 2019/947 : la distance horizontale de sécurité minimale est de 30 m des personnes non impliquées. Elle peut être réduite à 5 m si et seulement si le drone dispose d'un mode de vitesse réduite (Low Speed) actif, et après évaluation de la situation (conditions météo, performances du drone, ségrégation de la zone).",
   },
   {
     id: 17,
@@ -391,7 +391,7 @@ export const questions: Question[] = [
     category: "a2",
     theme: "Réglementation A2",
     difficulty: "difficile",
-    source: "Règlement (UE) 2019/947, UAS.OPEN.030(2)(f)",
+    source: "Règlement (UE) 2019/947, Annexe — UAS.OPEN.030(1)",
     question: "Un drone C2 peut-il voler au-dessus d'un rassemblement de personnes ?",
     options: [
       "Oui, en activant le mode Low Speed",
@@ -400,7 +400,7 @@ export const questions: Question[] = [
       "Oui, à plus de 50 m d'altitude"
     ],
     answer: 1,
-    explanation: "UAS.OPEN.030(2)(f) : voler au-dessus de rassemblements de personnes est interdit en sous-catégorie A2, quelle que soit la configuration. Pour voler au-dessus de foules, il faut une autorisation en catégorie Spécifique (PDRA ou STS avec classe C5/C6 appropriée).",
+    explanation: "UAS.OPEN.030(1), Règlement (UE) 2019/947 : en A2, l'aéronef ne doit pas survoler des personnes non impliquées. Il doit maintenir une distance horizontale de sécurité d'au moins 30 m (réductible à 5 m en Low Speed). Survoler des rassemblements est donc a fortiori interdit. Pour voler au-dessus de foules, il faut une autorisation en catégorie Spécifique (PDRA ou STS avec classe C5/C6 appropriée).",
   },
   {
     id: 26,

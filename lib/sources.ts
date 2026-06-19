@@ -357,10 +357,11 @@ export const REGULATORY_SOURCES: RegulatorySource[] = [
 export const EXAM_SYLLABUS = {
   bapd_a1a3: {
     name: "BAPD — Open A1/A3",
-    regulation: "Annexe to Part-UAS, UAS.OPEN.020",
+    regulation: "Annexe, UAS.OPEN.020 + Art. 9(1), Règl. (UE) 2019/947",
     questions: 40,
     duration_min: 30,
     pass_score_pct: 75,
+    subjects_count: 9,
     attempts: "Illimité (DGAC/AlphaTango)",
     subjects: [
       {
@@ -424,12 +425,32 @@ export const EXAM_SYLLABUS = {
       },
       {
         code: "PRIV",
-        name: "Vie privée et assurance",
+        name: "Vie privée et protection des données",
         topics: [
           "RGPD et protection des données personnelles",
           "Filmer des personnes identifiables",
-          "Obligation d'assurance RC (≥250g)",
+          "Droits des personnes filmées",
           "Données collectées par le drone",
+        ],
+      },
+      {
+        code: "ASS",
+        name: "Assurances",
+        topics: [
+          "Obligation d'assurance RC (Règl. UE 785/2004)",
+          "Couverture minimale pour drones ≥ 250 g",
+          "Assurance incluse dans la garantie habitation",
+          "Cas de non-couverture",
+        ],
+      },
+      {
+        code: "SEC",
+        name: "Sécurité (Security)",
+        topics: [
+          "Menaces sur les opérations UAS (jamming, spoofing)",
+          "Signalement d'activités suspectes",
+          "Protection des données opérationnelles",
+          "Cybersécurité des systèmes UAS",
         ],
       },
     ],
