@@ -1,472 +1,613 @@
 "use client";
-
 import { useState } from "react";
-import { FileText, ChevronRight, ChevronLeft, CheckCircle, Download, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import Nav from "@/components/Nav";
 
 type FormData = {
-  op_nom: string; op_adresse: string; op_siren: string; op_enreg: string; op_email: string; op_tel: string;
-  tp_nom: string; tp_prenom: string; tp_email: string; tp_cert: string; tp_date: string; tp_autorite: string;
-  uas_fab: string; uas_modele: string; uas_serie: string; uas_classe: "C5" | "C6" | "Autre"; uas_mtom: string;
-  uas_rid: string; uas_para: string; uas_fts: string;
-  scenario: "STS-01" | "STS-02"; zone: string; pays: string; hmax: string; rmax: string; grb: string;
-  urg_nom: string; urg_tel: string; atc: string; samu: string;
+  // Opérateur
+  operateurNom: string;
+  operateurSiren: string;
+  operateurAdresse: string;
+  operateurEmail: string;
+  operateurTel: string;
+  // RPIC
+  rpicNom: string;
+  rpicBrevet: string;
+  rpicExperience: string;
+  // UAS
+  uasMarque: string;
+  uasModele: string;
+  uasNumeroSerie: string;
+  uasMasse: string;
+  uasClasse: string;
+  uasParachute: boolean;
+  uasFts: boolean;
+  // Opération
+  scenario: "STS-01" | "STS-02";
+  zoneDescription: string;
+  hauteurMax: string;
+  grbDistance: string;
+  // Contacts
+  contactUrgenceNom: string;
+  contactUrgenceTel: string;
+  contactUrgenceRole: string;
 };
 
-const STEPS = [
-  { id: 1, label: "🏢 Opérateur" },
-  { id: 2, label: "👨‍✈️ Télépilote" },
-  { id: 3, label: "🚁 Drone" },
-  { id: 4, label: "📍 Opération" },
-  { id: 5, label: "📞 Urgences" },
-  { id: 6, label: "📄 Document" },
-];
-
-const INIT: FormData = {
-  op_nom: "", op_adresse: "", op_siren: "", op_enreg: "", op_email: "", op_tel: "",
-  tp_nom: "", tp_prenom: "", tp_email: "", tp_cert: "", tp_date: "", tp_autorite: "ILT (Pays-Bas)",
-  uas_fab: "", uas_modele: "", uas_serie: "", uas_classe: "C5", uas_mtom: "",
-  uas_rid: "Remote ID intégré — diffusion Wi-Fi/Bluetooth", uas_para: "", uas_fts: "",
-  scenario: "STS-01", zone: "", pays: "France", hmax: "120", rmax: "", grb: "",
-  urg_nom: "", urg_tel: "", atc: "", samu: "15",
+const EMPTY: FormData = {
+  operateurNom: "", operateurSiren: "", operateurAdresse: "", operateurEmail: "", operateurTel: "",
+  rpicNom: "", rpicBrevet: "", rpicExperience: "",
+  uasMarque: "", uasModele: "", uasNumeroSerie: "", uasMasse: "", uasClasse: "C5", uasParachute: false, uasFts: false,
+  scenario: "STS-01", zoneDescription: "", hauteurMax: "120", grbDistance: "30",
+  contactUrgenceNom: "", contactUrgenceTel: "", contactUrgenceRole: "",
 };
 
-function F({ label, k, d, set, type = "text", ph = "", hint = "", req = false }: {
-  label: string; k: keyof FormData; d: FormData;
-  set: (k: keyof FormData, v: string) => void;
-  type?: string; ph?: string; hint?: string; req?: boolean;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}{req && <span className="text-red-400 ml-1">*</span>}</label>
-      <input type={type} value={d[k] as string} onChange={e => set(k, e.target.value)}
-        placeholder={ph}
-        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400" />
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
-    </div>
-  );
-}
-
-function Sel({ label, k, d, set, opts, hint = "" }: {
-  label: string; k: keyof FormData; d: FormData;
-  set: (k: keyof FormData, v: string) => void;
-  opts: { v: string; l: string }[]; hint?: string;
-}) {
+function F({ label, id, value, onChange, placeholder, type = "text" }: { label: string; id: keyof FormData; value: string; onChange: (id: keyof FormData, v: string) => void; placeholder?: string; type?: string }) {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-gray-700">{label}</label>
-      <select value={d[k] as string} onChange={e => set(k, e.target.value)}
-        className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white">
-        {opts.map(o => <option key={o.v} value={o.v}>{o.l}</option>)}
-      </select>
-      {hint && <p className="text-xs text-gray-400">{hint}</p>}
+      <input type={type} value={value} onChange={e => onChange(id, e.target.value)} placeholder={placeholder}
+        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
     </div>
   );
 }
 
 function buildManex(d: FormData): string {
-  const today = new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
-  return `MANUEL D'EXPLOITATION (MANEX) — SCÉNARIO STANDARD ${d.scenario}
-Règlement (UE) 2019/947, Annexe — UAS.${d.scenario}
-AMC1 UAS.${d.scenario}.020 (EASA ED Decision 2019/021/R)
+  const today = new Date().toLocaleDateString("fr-FR");
+  return `MANUEL D'EXPLOITATION (MANEX)
+Conforme AMC1 UAS.STS-01/02.020 — EASA Règlement (UE) 2019/947
+Scénario Standard : ${d.scenario}
+Généré le : ${today}
 
-VERSION 1.0 — ${today}
+═══════════════════════════════════════════════════════════════
+SECTION 1 — INFORMATIONS SUR L'OPÉRATEUR
 ═══════════════════════════════════════════════════════════════
 
-SECTION 1 — OPÉRATEUR UAS
-────────────────────────────────────────────
-Raison sociale      : ${d.op_nom}
-Adresse             : ${d.op_adresse}
-SIREN               : ${d.op_siren}
-N° enregistrement   : ${d.op_enreg}
-Email               : ${d.op_email}
-Téléphone           : ${d.op_tel}
+Raison sociale : ${d.operateurNom || "[À compléter]"}
+N° SIREN / enregistrement : ${d.operateurSiren || "[À compléter]"}
+Adresse du siège social : ${d.operateurAdresse || "[À compléter]"}
+Email de contact : ${d.operateurEmail || "[À compléter]"}
+Téléphone : ${d.operateurTel || "[À compléter]"}
 
-SECTION 2 — TÉLÉPILOTE RESPONSABLE (RPIC)
-────────────────────────────────────────────
-Nom / Prénom        : ${d.tp_nom} ${d.tp_prenom}
-Email               : ${d.tp_email}
-N° certificat CATS  : ${d.tp_cert}
-Date de délivrance  : ${d.tp_date}
-Autorité délivrante : ${d.tp_autorite}
+Déclarations Légales et Conformité :
+L'opérateur s'engage à respecter toutes les exigences de l'EASA et des scénarios européens ${d.scenario}. L'opérateur confirme être enregistré sur AlphaTango et disposer d'un numéro d'opérateur valide.
 
-SECTION 3 — SYSTÈME UAS (DRONE)
-────────────────────────────────────────────
-Fabricant           : ${d.uas_fab}
-Modèle              : ${d.uas_modele}
-N° de série         : ${d.uas_serie}
-Classe CE           : ${d.uas_classe}  (Règl. délégué (UE) 2019/945, Art. ${d.uas_classe === "C5" ? "5" : d.uas_classe === "C6" ? "6" : "—"})
-MTOM                : ${d.uas_mtom} kg
-Remote ID           : ${d.uas_rid}
-Parachute balistique: ${d.uas_para}
-Terminaison de vol  : ${d.uas_fts}
+═══════════════════════════════════════════════════════════════
+SECTION 2 — STRUCTURE ORGANISATIONNELLE ET RESPONSABILITÉS
+═══════════════════════════════════════════════════════════════
 
-SECTION 4 — DESCRIPTION DE L'OPÉRATION
-────────────────────────────────────────────
-Scénario            : ${d.scenario}
-Mode de vol         : VLOS (Visual Line of Sight)
-Pays                : ${d.pays}
-Zone d'opération    : ${d.zone}
-Hauteur maximale    : ${d.hmax} m AGL
-Rayon maximal       : ${d.rmax} m
-Ground risk buffer  : ${d.grb} m
+Télépilote Responsable (RPIC) : ${d.rpicNom || "[À compléter]"}
+N° de brevet / certificat : ${d.rpicBrevet || "[À compléter]"}
+Expérience de vol : ${d.rpicExperience || "[À compléter]"} heures
+Rôles et responsabilités :
+  - Vérification de l'espace aérien avant chaque mission
+  - Contrôle pré-vol du système UAS
+  - Décision finale sur le lancement ou l'annulation de la mission
+  - Gestion des situations d'urgence
 
-${d.scenario === "STS-01" ? `Conditions STS-01 (UAS.STS-01.020) :
-  • Zone contrôlée — personnes non impliquées exclues en permanence
-  • Délimitation physique obligatoire (rubalise, cônes, barrières)
-  • Vérification d'exclusion avant chaque décollage
-  • Drone de classe C5 équipé d'un système de terminaison de vol et
-    d'un parachute réduisant l'énergie cinétique à ≤ 80 J à l'impact` :
-`Conditions STS-02 (UAS.STS-02.020) :
-  • Zone peu peuplée / milieu principalement non habité
-  • Survol de personnes non impliquées autorisé sous conditions
-  • Drone de classe C6 avec redondances systèmes renforcées
-  • Parachute certifié — énergie cinétique contrôlée à l'impact`}
+Qualifications et exigences du personnel :
+  - CATS (STS) obtenu via examen agréé par les autorités aéronautiques
+  - Formation pratique en centre agréé validée
+  - Formation continue : révision annuelle des procédures
 
+═══════════════════════════════════════════════════════════════
+SECTION 3 — SYSTÈME UAS
+═══════════════════════════════════════════════════════════════
+
+Fabricant / Marque : ${d.uasMarque || "[À compléter]"}
+Modèle : ${d.uasModele || "[À compléter]"}
+Numéro de série : ${d.uasNumeroSerie || "[À compléter]"}
+Masse au décollage (MTOM) : ${d.uasMasse || "[À compléter]"} kg
+Classe EASA : ${d.uasClasse}
+Système parachute : ${d.uasParachute ? "OUI — homologué et opérationnel" : "NON"}
+Système de fin de vol (FTS) : ${d.uasFts ? "OUI — opérationnel et testé" : "NON"}
+
+Maintenance et entretien :
+  - Inspection pré-vol : liste de vérification obligatoire (voir Section 5)
+  - Maintenance préventive : selon les recommandations du fabricant
+  - Registre de maintenance tenu à jour (heures de vol, incidents, remplacements)
+  - Tout défaut détecté = arrêt des opérations jusqu'à correction documentée
+
+═══════════════════════════════════════════════════════════════
+SECTION 4 — DESCRIPTION DES OPÉRATIONS
+═══════════════════════════════════════════════════════════════
+
+Scénario applicable : ${d.scenario}
+${d.scenario === "STS-01"
+  ? `Type d'opération : Vols en zones urbaines peuplées (VLOS)
+Classe de drone requise : C5
+Hauteur maximale autorisée : ${d.hauteurMax} m AGL
+Zone tampon au sol (GRB) : ${d.grbDistance} m minimum autour de la zone d'opération
+Conditions spécifiques STS-01 :
+  - Vol en vue directe du télépilote (VLOS) obligatoire
+  - Zone peuplée : application stricte du GRB
+  - Signalisation de la zone opérationnelle requise
+  - Coordination préalable avec les autorités locales si nécessaire`
+  : `Type d'opération : Vols en zones faiblement peuplées (BVLOS jusqu'à +2 km du pilote)
+Classe de drone requise : C6
+Hauteur maximale autorisée : ${d.hauteurMax} m AGL
+Zone tampon au sol (GRB) : ${d.grbDistance} m minimum autour de la zone d'opération
+Conditions spécifiques STS-02 :
+  - Vols hors vue autorisés jusqu'à 2 km du télépilote
+  - Zone faiblement peuplée vérifiée avant opération
+  - Observateur de vol (VO) recommandé pour liaisons hors vue
+  - Coordination avec le gestionnaire d'espace aérien local`}
+
+Description de la zone opérationnelle :
+${d.zoneDescription || "[Décrire la zone : coordonnées GPS, nature du terrain, obstacles, activités riveraines...]"}
+
+Zones de vol et limites opérationnelles :
+  - Espace aérien : vérification via Géoportail et AlphaTango avant chaque mission
+  - Restrictions temporaires : consultées la veille et le jour J
+  - Zones interdites, réglementées et dangereuses : exclues du plan de vol
+
+═══════════════════════════════════════════════════════════════
 SECTION 5 — PROCÉDURES NORMALES
-────────────────────────────────────────────
-5.1 Préparation pré-vol
-    a) Consultation NOTAM et espace aérien (Géoportail / SIA)
-    b) Vérification météo (vent, visibilité ≥ 500 m, plafond)
-    c) Inspection mécanique UAS (châssis, hélices, visserie)
-    d) Vérification batteries (charge ≥ 90 %, état LiPo visuel)
-    e) Test Remote ID (diffusion confirmée avant décollage)
-    f) Test parachute balistique (goupille, capteur, déclenchement)
-    g) Test terminaison de vol (commande dédiée opérationnelle)
-    h) Briefing équipe (RPIC + observateurs) : rôles, signaux, urgences
-    i) Délimitation de la zone d'opération + ground risk buffer ${d.grb} m
-    j) Confirmation absence personnes non impliquées dans la zone
+═══════════════════════════════════════════════════════════════
 
-5.2 Procédures de vol
-    a) Décollage progressif — vérification comportement UAS
-    b) Maintien VLOS permanent (télépilote ou observateur désigné)
-    c) Respect hauteur max ${d.hmax} m AGL en toutes circonstances
-    d) Surveillance batterie (atterrissage si seuil d'alerte atteint)
-    e) Communication continue RPIC ↔ observateurs
+5.1 — Procédures pré-vol
+  □ Vérification météo (vent < 8 m/s, visibilité > 5 km, pas de précipitations)
+  □ Consultation espace aérien (AlphaTango, Géoportail, NOTAMs)
+  □ Inspection visuelle du drone (châssis, hélices, moteurs, connecteurs)
+  □ Vérification de la charge batterie (≥ 95%)
+  □ Contrôle de la liaison de données (signal RC, vidéo-retour)
+  □ Test du FTS ${d.uasFts ? "✓ OBLIGATOIRE" : "(non applicable)"}
+  □ Test du parachute ${d.uasParachute ? "✓ OBLIGATOIRE" : "(non applicable)"}
+  □ Mise en place du périmètre de sécurité / GRB ${d.grbDistance} m
+  □ Briefing de l'équipe au sol
 
-5.3 Atterrissage et post-vol
-    a) Annonce de l'atterrissage imminente à l'équipe
-    b) Zone d'atterrissage vérifiée et libre
-    c) Atterrissage doux — désarmement immédiat
-    d) Sécurisation batteries — inspection post-vol de l'UAS
-    e) Débriefing équipe — consignation du vol dans le logbook EASA
+5.2 — Procédures de vol
+  □ Décollage progressif — vérification stabilité à 5 m AGL
+  □ Montée vers altitude opérationnelle (max ${d.hauteurMax} m AGL)
+  □ Surveillance continue de la position et du comportement UAS
+  □ Contrôle régulier de la charge batterie (RTH si < 30%)
+  □ Maintien du contact radio avec l'équipe au sol
 
+5.3 — Procédures post-vol
+  □ Atterrissage contrôlé dans la zone désignée
+  □ Sécurisation du drone (moteurs arrêtés, batteries retirées)
+  □ Inspection post-vol (dommages, usure hélices)
+  □ Enregistrement dans le registre de vol (durée, zone, anomalies)
+  □ Rapport d'incident si nécessaire
+
+═══════════════════════════════════════════════════════════════
 SECTION 6 — PROCÉDURES DE CONTINGENCE
-────────────────────────────────────────────
-Déclencheurs :
-  • Signal de commande dégradé (indicateur faible sur télécommande)
-  • Conditions météo dépassant les seuils opérationnels
-  • Intrusion personne non impliquée dans la zone (STS-01)
-  • Niveau batterie sous le seuil d'alerte
-  • Comportement anormal UAS (dérive, vibrations, oscillations)
+═══════════════════════════════════════════════════════════════
 
-Actions :
-  1. Annoncer la situation à l'équipe (verbal + signal prédéfini)
-  2. Mettre l'UAS en hover immédiatement
-  3. Évaluer la situation (≤ 15 secondes)
-  4. Si résolution : reprendre procédures normales
-  5. Si non résolution : déclencher procédures d'urgence Section 7
-  6. Documenter dans le rapport post-vol
+Perte de liaison de données (signal RC perdu) :
+  → Le drone exécute le mode RTH (Return to Home) automatiquement
+  → Si non résolu en 30 secondes : activation de la procédure d'atterrissage d'urgence
+  → Notification immédiate à ${d.contactUrgenceNom || "la personne de contact d'urgence"}
 
+Météo dégradée en cours de vol :
+  → Retour immédiat au point de décollage dès que les conditions passent sous les seuils
+  → Seuils d'interruption : vent > 8 m/s, rafales > 10 m/s, visibilité < 3 km
+  → Atterrissage d'urgence si retour impossible avant conditions critiques
+
+Intrusion dans la zone opérationnelle :
+  → Interruption immédiate de la mission
+  → Mise en vol stationnaire à l'altitude de sécurité
+  → Attente de dégagement de la zone ou atterrissage d'urgence contrôlé
+
+Batterie critique (< 20%) :
+  → Retour immédiat au point de décollage
+  → Atterrissage d'urgence si retour impossible
+  → Log de l'incident dans le registre de vol
+
+═══════════════════════════════════════════════════════════════
 SECTION 7 — PROCÉDURES D'URGENCE
-────────────────────────────────────────────
-7.1 Perte totale liaison de commande
-    → Failsafe préprogrammé s'exécute (RTH ou terminaison de vol)
-    → Équipe sécurise la zone de retour automatique
-    → Contacter ATC si zone contrôlée : ${d.atc || "voir autorisation locale"}
+═══════════════════════════════════════════════════════════════
 
-7.2 Panne critique en vol (moteur, contrôleur de vol)
-    → Déclencher MANUELLEMENT le système de terminaison de vol
-    → Crier : "ATTENTION — DRONE EN URGENCE !"
-    → Sécuriser les personnes présentes — éloignement immédiat
-    → Après impact : baliser zone, NE PAS toucher aux batteries
-    → Appeler secours si nécessaire : SAMU ${d.samu} / 112
+Contact urgence : ${d.contactUrgenceNom || "[À compléter]"} — ${d.contactUrgenceTel || "[À compléter]"} (${d.contactUrgenceRole || "[rôle]"})
+Urgences publiques : 15 (SAMU), 17 (Police), 18 (Pompiers), 112 (Urgences Europe)
 
-7.3 Accident avec dommages corporels
-    → SAMU ${d.samu} immédiatement
-    → Contact urgence opérateur : ${d.urg_nom} — ${d.urg_tel}
-    → Sécuriser la zone — ne pas déplacer les blessés
-    → Déclarer l'occurrence à l'autorité compétente (DGAC France)
-       sous 72 h via portail ECCAIRS/SIGANE (Règl. (UE) 376/2014)
-    → Conserver logs de vol et vidéos sans altération
+7.1 — Panne moteur / perte de contrôle totale
+  1. Activer immédiatement le FTS si équipé
+  2. Tenter de reprendre le contrôle manuel
+  3. Guider l'UAS vers une zone dégagée si possible
+  4. Alerter les personnes au sol
+  5. Sécuriser la zone d'impact
+  6. Appeler les secours si blessés ou dommages matériels
+  7. Rédiger rapport d'incident dans les 24h
 
-7.4 Incendie batterie LiPo
-    → Éloigner toute personne à ≥ 50 m de la batterie
-    → NE PAS utiliser d'eau — sable ou extincteur CO2 uniquement
-    → Appeler pompiers (18 ou 112)
-    → Laisser brûler à distance contrôlée
+7.2 — Incendie de batterie au sol
+  1. Éloigner les personnes (périmètre de sécurité 10 m)
+  2. NE PAS tenter d'éteindre avec de l'eau
+  3. Utiliser un extincteur CO2 ou un sac ignifuge LiPo
+  4. Appeler les pompiers (18) si incendie non maîtrisé
+  5. Documenter l'incident
 
+7.3 — Accident avec blessés
+  1. Alerter les secours (15 ou 112)
+  2. Ne pas déplacer les blessés sauf danger immédiat
+  3. Sécuriser la zone
+  4. Préserver les preuves (drone, enregistrements)
+  5. Contacter l'assurance dans les 24h
+  6. Déclarer l'accident à la DGAC (AlphaTango) dans les 72h
+
+7.4 — Violation d'espace aérien involontaire
+  1. Retour immédiat hors de la zone
+  2. Atterrissage dès que possible
+  3. Contacter le contrôle aérien local si possible
+  4. Documenter l'incident et déclarer à la DGAC
+
+═══════════════════════════════════════════════════════════════
 SECTION 8 — ÉVALUATION DES RISQUES
-────────────────────────────────────────────
-RISQUE 1 — Collision aéronef habité
-  Probabilité : Faible | Gravité : Critique
-  Mitigation : NOTAM pré-vol, VLOS permanent, hauteur max ${d.hmax} m
+═══════════════════════════════════════════════════════════════
 
-RISQUE 2 — Impact personne au sol
-  Probabilité : Faible | Gravité : Majeure
-  Mitigation : Zone contrôlée, GRB ${d.grb} m, parachute, FTS
+Méthodologie : SORA (Specific Operations Risk Assessment) — SAIL II
 
-RISQUE 3 — Conditions météo dépassées
-  Probabilité : Modérée | Gravité : Majeure
-  Mitigation : Vérification météo pré-vol, seuils définis, annulation
+Risques identifiés :
+  1. Collision avec des personnes au sol
+     Probabilité : Moyenne | Gravité : Élevée | Atténuation : GRB ${d.grbDistance}m, assurance RC
+  2. Conflit avec le trafic aérien
+     Probabilité : Faible | Gravité : Critique | Atténuation : vérification espace aérien, signalement
+  3. Perte de contrôle de l'UAS
+     Probabilité : Faible | Gravité : Élevée | Atténuation : maintenance, procédures d'urgence
+  4. Conditions météo défavorables
+     Probabilité : Moyenne | Gravité : Moyenne | Atténuation : vérification météo obligatoire pré-vol
+  5. Défaillance technique (batterie, moteur)
+     Probabilité : Faible | Gravité : Élevée | Atténuation : inspection pré-vol, FTS, parachute
 
-RISQUE 4 — Défaillance technique
-  Probabilité : Faible | Gravité : Majeure
-  Mitigation : Inspection pré-vol, maintenance préventive, FTS
+═══════════════════════════════════════════════════════════════
+SECTION 9 — FACTEURS HUMAINS
+═══════════════════════════════════════════════════════════════
 
-RISQUE 5 — Atteinte vie privée / RGPD
-  Probabilité : Modérée | Gravité : Modérée
-  Mitigation : Base légale RGPD documentée, information préalable
+Le RPIC s'engage à :
+  - Ne pas opérer en cas de fatigue (moins de 6h de sommeil)
+  - Ne pas opérer sous l'influence de médicaments altérant la vigilance
+  - Ne pas opérer en cas d'état de stress ou de trouble émotionnel significatif
+  - Effectuer un bilan de forme avant chaque mission longue
+  - Signaler toute condition médicale pouvant affecter les capacités de pilotage
+  - Respecter les pauses (maximum 4h de vol continu)
 
-SECTION 9 — MAINTENANCE
-────────────────────────────────────────────
-Avant chaque vol  : inspection mécanique complète (voir Section 5.1)
-Tous les 50 vols  : contrôle moteurs, ESC, soudures
-Tous les 100 h    : révision châssis, roulements, châssis
-Annuellement      : recertification parachute balistique
-Après incident    : inspection complète avant remise en service
+═══════════════════════════════════════════════════════════════
+SECTION 10 — PLAN D'INTERVENTION D'URGENCE (EUP)
+═══════════════════════════════════════════════════════════════
 
-Toute intervention est consignée dans le registre de maintenance
-de l'UAS avec date, nature, pièces remplacées et signature.
+En cas d'urgence majeure :
+  1. Sécuriser les personnes (évacuation de la zone)
+  2. Appeler les secours appropriés
+  3. Notifier ${d.contactUrgenceNom || "le contact d'urgence"} au ${d.contactUrgenceTel || "[numéro]"}
+  4. Sécuriser et préserver les équipements et enregistrements
+  5. Coopérer avec les autorités
+  6. Rédiger un rapport complet dans les 24h
+  7. Déclaration à la DGAC via AlphaTango si requis
 
-SECTION 10 — FACTEURS HUMAINS
-────────────────────────────────────────────
-• Durée max vol continu sans pause : 4 heures
-• Rotation télépilote recommandée : toutes les 2 heures
-• Vol interdit en cas de : fatigue, médicaments altérant la vigilance,
-  troubles visuels, stress excessif
-• Briefing obligatoire avant chaque mission
-
+═══════════════════════════════════════════════════════════════
 SECTION 11 — DÉCLARATION DE CONFORMITÉ
-────────────────────────────────────────────
-L'opérateur ${d.op_nom} déclare que ce Manuel d'Exploitation
-est conforme aux exigences du scénario standard ${d.scenario}
-(Règlement (UE) 2019/947, Annexe — UAS.${d.scenario}) et a été
-élaboré selon l'AMC1 UAS.${d.scenario}.020 (EASA).
+═══════════════════════════════════════════════════════════════
 
-La déclaration opérationnelle sera déposée auprès de l'autorité
-nationale compétente avant toute opération.
+Je soussigné(e) ${d.operateurNom || "[Opérateur]"}, représentant légal de la société, atteste que :
 
-Fait le ${today}
+  ✓ Le présent MANEX est conforme aux exigences du Règlement (UE) 2019/947, Annexe — ${d.scenario}
+  ✓ Le système UAS ${d.uasMarque} ${d.uasModele} est conforme à la classe ${d.uasClasse} EASA
+  ✓ L'opérateur est enregistré sur AlphaTango avec un numéro valide
+  ✓ Le RPIC détient les qualifications requises pour le scénario ${d.scenario}
+  ✓ Ce document sera soumis à la DGAC lors de toute déclaration de vol spécifique
+  ✓ Ce MANEX sera révisé au minimum une fois par an ou après tout incident significatif
 
-Signature :
+Fait à _________________, le ${today}
 
-_________________________
-${d.op_nom}
-${d.tp_prenom} ${d.tp_nom} (RPIC)
+Signature de l'opérateur : _______________________
+${d.operateurNom || "[Nom de l'opérateur]"}
 
-RÉFÉRENCES
-────────────────────────────────────────────
-• Règlement (UE) 2019/947 — Annexe UAS.${d.scenario}
-• Règlement délégué (UE) 2019/945 — Classe ${d.uas_classe}
-• AMC & GM to Part-UAS — Issue 1, Amendment 2 (EASA)
-• Easy Access Rules for UAS — Révision Juillet 2024 (EASA)
-• Règlement (UE) 376/2014 — Compte-rendu d'événements
-• RGPD (UE) 2016/679
-
-Généré par CertifDrone.fr — ${today}
-Ce modèle doit être adapté à votre situation spécifique.
+─────────────────────────────────────────────────────────────
+⚠️  AVERTISSEMENT : Ce document est un modèle basé sur AMC1 UAS.STS-01/02.020 (EASA).
+Il doit être adapté à votre activité spécifique avant dépôt sur AlphaTango.
+Consultez un conseiller réglementaire qualifié si nécessaire.
+─────────────────────────────────────────────────────────────
+Références réglementaires : Règlement (UE) 2019/947 | AMC & GM Part-UAS | Easy Access Rules UAS (EASA, juillet 2024)
+Généré par CertifDrone.fr — contact@certifdrone.fr
 `;
 }
 
+const STEP_TITLES = ["Opérateur", "Télépilote RPIC", "Système UAS", "Opération", "Contacts urgence"];
+
 export default function ManexPage() {
-  const [step, setStep] = useState(1);
-  const [d, setD] = useState<FormData>(INIT);
-  const [manex, setManex] = useState("");
+  const [step, setStep] = useState(0);
+  const [form, setForm] = useState<FormData>(EMPTY);
+  const [generated, setGenerated] = useState(false);
+  const [manexText, setManexText] = useState("");
 
-  const set = (k: keyof FormData, v: string) => setD(f => ({ ...f, [k]: v }));
+  const set = (id: keyof FormData, v: string | boolean) => setForm(f => ({ ...f, [id]: v }));
 
-  const generate = () => { setManex(buildManex(d)); setStep(6); };
+  const generate = () => {
+    const text = buildManex(form);
+    setManexText(text);
+    setGenerated(true);
+  };
 
   const download = () => {
-    const blob = new Blob([manex], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([manexText], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `MANEX_${d.scenario}_${d.op_nom.replace(/\s+/g, "_") || "operateur"}_v1.0.txt`;
+    a.download = `MANEX_${form.operateurNom.replace(/\s+/g, "_") || "drone"}_${form.scenario}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-        <a href="/" className="text-xl font-bold text-sky-600">CertifDrone.fr</a>
-        <a href="/outils" className="text-sm text-gray-500 hover:text-sky-600">← Outils</a>
-      </header>
-
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-orange-100 rounded-xl"><FileText className="w-5 h-5 text-orange-600" /></div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Générateur MANEX</h1>
-              <p className="text-sm text-gray-500">Manuel d'Exploitation conforme EASA — STS-01 / STS-02</p>
+  if (generated) {
+    return (
+      <div className="min-h-screen bg-white font-sans">
+        <Nav />
+        <main className="pt-16 max-w-4xl mx-auto px-4 py-12">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Votre MANEX — {form.scenario}</h1>
+            <div className="flex gap-3">
+              <button onClick={() => setGenerated(false)} className="px-4 py-2 border border-gray-300 rounded-full text-sm hover:bg-gray-50 transition-colors">← Modifier</button>
+              <button onClick={download} className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors text-sm">⬇ Télécharger .txt</button>
             </div>
           </div>
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-amber-700">
-              Modèle basé sur l'AMC1 UAS.STS-01/02.020 (EASA). À adapter à votre situation avant dépôt sur AlphaTango.
-            </p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
+            ⚠️ Modèle basé sur AMC1 UAS.STS-01/02.020 (EASA). À adapter à votre activité spécifique avant dépôt sur AlphaTango.
           </div>
-        </div>
-
-        {/* Steps */}
-        <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-1">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-1 flex-shrink-0">
-              <button
-                onClick={() => step > s.id && setStep(s.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
-                  step === s.id ? "bg-sky-600 text-white" :
-                  step > s.id ? "bg-green-100 text-green-700 cursor-pointer" :
-                  "bg-gray-100 text-gray-400"
-                }`}
-              >{s.label}</button>
-              {i < STEPS.length - 1 && <div className={`w-3 h-px flex-shrink-0 ${step > s.id ? "bg-green-300" : "bg-gray-200"}`} />}
-            </div>
-          ))}
-        </div>
-
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-
-          {step === 1 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Informations Opérateur</h2>
-              <F label="Raison sociale / Nom" k="op_nom" d={d} set={set} req ph="SkyPro SARL" />
-              <F label="Adresse complète" k="op_adresse" d={d} set={set} req ph="12 rue de l'Aviation, 75001 Paris" />
-              <div className="grid grid-cols-2 gap-4">
-                <F label="SIREN" k="op_siren" d={d} set={set} ph="123 456 789" />
-                <F label="N° enregistrement opérateur" k="op_enreg" d={d} set={set} ph="FRA-OP-XXXXX" hint="AlphaTango / portail national" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Email" k="op_email" d={d} set={set} type="email" ph="contact@skypro.fr" />
-                <F label="Téléphone" k="op_tel" d={d} set={set} ph="+33 6 00 00 00 00" />
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Télépilote Responsable (RPIC)</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Nom" k="tp_nom" d={d} set={set} req ph="Dupont" />
-                <F label="Prénom" k="tp_prenom" d={d} set={set} req ph="Jean" />
-              </div>
-              <F label="Email" k="tp_email" d={d} set={set} type="email" ph="jean.dupont@skypro.fr" />
-              <F label="N° certificat CATS" k="tp_cert" d={d} set={set} ph="NL-CATS-XXXXX" hint="Numéro sur votre certificat officiel" />
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Date de délivrance" k="tp_date" d={d} set={set} type="date" />
-                <F label="Autorité délivrante" k="tp_autorite" d={d} set={set} ph="ILT (Pays-Bas)" />
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Système UAS (Drone)</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Fabricant" k="uas_fab" d={d} set={set} req ph="DJI, Parrot, Autel…" />
-                <F label="Modèle" k="uas_modele" d={d} set={set} req ph="Matrice 350 RTK" />
-              </div>
-              <F label="Numéro de série" k="uas_serie" d={d} set={set} ph="4XL0C-XXXXXXXX" />
-              <div className="grid grid-cols-2 gap-4">
-                <Sel label="Classe CE" k="uas_classe" d={d} set={set} hint="Voir marquage drone"
-                  opts={[{ v: "C5", l: "C5 — STS-01" }, { v: "C6", l: "C6 — STS-02" }, { v: "Autre", l: "Autre / spécifique" }]} />
-                <F label="MTOM (kg)" k="uas_mtom" d={d} set={set} ph="4.2" hint="Masse max au décollage" />
-              </div>
-              <F label="Remote ID" k="uas_rid" d={d} set={set} ph="Remote ID intégré — Wi-Fi/Bluetooth" />
-              <F label="Parachute balistique" k="uas_para" d={d} set={set} ph="Opale 32 — certifié, énergie < 80 J" hint="Obligatoire C5 et C6" />
-              <F label="Système de terminaison de vol (FTS)" k="uas_fts" d={d} set={set} ph="Coupe-moteur canal 7 télécommande" hint="Obligatoire — arrêt sur commande" />
-            </div>
-          )}
-
-          {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Description de l'Opération</h2>
-              <Sel label="Scénario Standard" k="scenario" d={d} set={set}
-                opts={[{ v: "STS-01", l: "STS-01 — Zone contrôlée, drone C5" }, { v: "STS-02", l: "STS-02 — Zone peu peuplée, drone C6" }]} />
-              <F label="Pays d'opération" k="pays" d={d} set={set} ph="France" />
-              <F label="Description de la zone d'opération" k="zone" d={d} set={set}
-                ph="Inspection lignes HT, commune de Saint-Étienne, hors agglomération, accès restreint."
-                hint="Type de terrain, obstacles, environnement, accès" />
-              <div className="grid grid-cols-3 gap-4">
-                <F label="Hauteur max (m AGL)" k="hmax" d={d} set={set} ph="120" hint="Max réglementaire : 120 m" />
-                <F label="Rayon max (m)" k="rmax" d={d} set={set} ph="500" hint="Distance RPIC ↔ drone" />
-                <F label="Ground risk buffer (m)" k="grb" d={d} set={set} ph="30" hint="Zone tampon autour de l'opération" />
-              </div>
-            </div>
-          )}
-
-          {step === 5 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-gray-900 mb-2">Contacts d'Urgence</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <F label="Contact urgence opérateur (nom)" k="urg_nom" d={d} set={set} ph="Marie Dupont" />
-                <F label="Téléphone urgence" k="urg_tel" d={d} set={set} ph="+33 6 00 00 00 00" />
-              </div>
-              <F label="Fréquence / Contact ATC local" k="atc" d={d} set={set} ph="Paris Info 125.725 MHz"
-                hint="Si opération en espace contrôlé ou près d'un aérodrome" />
-              <F label="Numéro SAMU" k="samu" d={d} set={set} ph="15" hint="15 en France, 112 en Europe" />
-              <div className="mt-4 p-4 bg-green-50 border border-green-100 rounded-xl">
-                <p className="text-sm font-medium text-green-800">✅ Toutes les sections sont renseignées</p>
-                <p className="text-xs text-green-700 mt-1">Cliquez sur "Générer le MANEX" pour créer votre document.</p>
-              </div>
-            </div>
-          )}
-
-          {step === 6 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="w-8 h-8 text-green-500" />
-                <div>
-                  <h2 className="font-semibold text-gray-900 text-lg">MANEX généré !</h2>
-                  <p className="text-sm text-gray-500">Scénario {d.scenario} — {d.op_nom}</p>
-                </div>
-              </div>
-              <button onClick={download}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-sky-600 text-white rounded-xl font-medium hover:bg-sky-700 transition-colors">
-                <Download className="w-5 h-5" /> Télécharger le MANEX (.txt)
-              </button>
-              <div className="border border-gray-100 rounded-xl overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 border-b border-gray-100">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Aperçu</p>
-                </div>
-                <pre className="p-4 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed max-h-80 overflow-y-auto font-mono">{manex}</pre>
-              </div>
-              <div className="p-4 bg-orange-50 border border-orange-100 rounded-xl">
-                <p className="text-xs font-medium text-orange-700 mb-1">⚠️ Étapes suivantes</p>
-                <ol className="text-xs text-orange-700 space-y-1 list-decimal list-inside">
-                  <li>Relisez et adaptez à votre situation précise</li>
-                  <li>Faites valider par un expert réglementaire si besoin</li>
-                  <li>Déposez votre déclaration opérationnelle sur AlphaTango</li>
-                  <li>Conservez ce MANEX disponible lors de chaque opération</li>
-                </ol>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {step < 6 && (
-          <div className="flex items-center justify-between">
-            <button onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1}
-              className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 disabled:opacity-30">
-              <ChevronLeft className="w-4 h-4" /> Précédent
-            </button>
-            {step < 5 ? (
-              <button onClick={() => setStep(s => s + 1)}
-                className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 text-white rounded-xl text-sm font-medium hover:bg-sky-700">
-                Suivant <ChevronRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button onClick={generate}
-                className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
-                <FileText className="w-4 h-4" /> Générer le MANEX
-              </button>
-            )}
-          </div>
-        )}
+          <pre className="bg-gray-900 text-green-300 rounded-xl p-6 text-xs overflow-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[70vh]">{manexText}</pre>
+        </main>
       </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white font-sans">
+      <Nav />
+      <main className="pt-16">
+
+        {/* Hero */}
+        <section className="bg-gradient-to-br from-blue-50 to-white py-16 px-4">
+          <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-gray-900 mb-3">
+                Votre <span className="text-orange-500">Manuel d&apos;exploitation</span> drone rédigé pour <span className="text-orange-500">199€</span>
+              </h1>
+              <p className="text-gray-600 mb-6">La façon la plus simple et abordable pour obtenir votre MANEX en 72h.</p>
+              <button onClick={() => document.getElementById("form-section")?.scrollIntoView({ behavior: "smooth" })}
+                className="inline-block bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors shadow-md">Générer mon MANEX</button>
+            </div>
+            <div className="flex-1 max-w-sm w-full bg-white rounded-2xl shadow-xl border-2 border-blue-100 p-6">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded">EASA</div>
+                <div className="ml-2 text-xs text-gray-500">European Union Aviation Safety Agency</div>
+              </div>
+              <p className="text-xs text-center text-gray-600 mb-3">Manuel d&apos;exploitation / OM pour l&apos;exploitation dans SAIL II de systèmes d&apos;avions sans pilote (UAS)</p>
+              <ul className="text-xs text-gray-700 space-y-2">
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Format du Manex modifiable pour garder la main</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Un Manex conforme aux exigences EASA</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Une équipe joignable et à votre écoute</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Obligatoire pour les exploitants drone</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>10 min pour saisir vos informations</li>
+                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Scénarios STS01 et STS02</li>
+              </ul>
+              <div className="mt-4 text-center">
+                <span className="text-3xl font-extrabold text-orange-500">199€</span>
+                <span className="text-gray-400 text-sm ml-1">TTC</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pourquoi un MANEX */}
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Votre Manuel d&apos;exploitation drone rédigé pour <span className="text-orange-500">199€</span></h2>
+
+            <div className="grid md:grid-cols-3 gap-6 mt-8">
+              {[
+                { title: "Conforme :", sub: "NORMES EASA", desc: "Nos MANEX respectent toutes les exigences de l'EASA et des scénarios européens STS01 et STS02." },
+                { title: "Modifiable :", sub: "GARDEZ LE CONTRÔLE", desc: "Recevez votre MANEX au format PDF et Word, prêt à être utilisé et adapté si nécessaire." },
+                { title: "Expertise :", sub: "UN GAGE DE SÉRIEUX ET DE QUALITÉ", desc: "CertifDrone.fr, leader de la préparation et du passage d'examens drone en France, propose des MANEX personnalisés et conformes aux normes initiées par l'EASA." },
+              ].map(c => (
+                <div key={c.title} className="bg-gray-50 rounded-xl p-5">
+                  <h3 className="text-xl font-bold text-gray-900">{c.title}</h3>
+                  <p className="text-xs font-semibold text-orange-500 mb-2">{c.sub}</p>
+                  <p className="text-sm text-gray-600">{c.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Comment rédiger un MANEX Drone ?</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  { step: "1", title: "Remplissez le Formulaire", desc: "Remplissez notre formulaire en ligne en quelques minutes et recevez un MANEX complet et adapté à votre exploitation." },
+                  { step: "2", title: "Paiement Sécurisé", desc: "Effectuez votre paiement en toute sécurité via Stripe. Plusieurs facilités de paiement disponibles directement sur votre interface sécurisée." },
+                  { step: "3", title: "Recevez Votre MANEX", desc: "Sous 72h, recevez votre MANEX personnalisé par email. Formats PDF et Word modifiables inclus." },
+                ].map(s => (
+                  <div key={s.step} className="flex gap-4">
+                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.step}</div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 mb-1">{s.title}</h4>
+                      <p className="text-sm text-gray-600">{s.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-10">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Ce que comprend votre MANEX conforme aux normes EASA</h3>
+              <ul className="grid md:grid-cols-2 gap-3 text-sm text-gray-700">
+                {[
+                  "Informations sur l'Opérateur — Détails complets sur l'identité et les coordonnées de l'opérateur de drone.",
+                  "Déclarations Légales et Conformité — Engagement à respecter les réglementations de l'EASA et assurer la sécurité des données.",
+                  "Structure Organisationnelle — Description des rôles et responsabilités au sein de l'organisation.",
+                  "Qualifications et Exigences du Personnel — Certifications et formations requises.",
+                  "Procédures d'Opération — Planification, exécution et gestion des vols.",
+                  "Zones de Vol et Limites Opérationnelles — Définition des zones autorisées.",
+                  "Gestion de la Sécurité — Surveillance et gestion des risques.",
+                  "Maintenance et Entretien des Drones — Procédures d'entretien régulier.",
+                  "Plan d'Intervention d'Urgence (EUP) — Gestion des situations d'urgence.",
+                ].map(item => (
+                  <li key={item} className="flex gap-2 bg-gray-50 rounded-lg p-3">
+                    <span className="text-orange-500 flex-shrink-0">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* Formulaire */}
+        <section id="form-section" className="py-16 px-4 bg-gray-50">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Générer votre MANEX gratuitement</h2>
+            <p className="text-gray-500 text-sm mb-8">Remplissez les informations pour obtenir votre MANEX personnalisé conforme EASA.</p>
+
+            {/* Progress */}
+            <div className="flex items-center gap-2 mb-8">
+              {STEP_TITLES.map((t, i) => (
+                <div key={i} className="flex items-center gap-1 flex-1">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i <= step ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-400"}`}>{i + 1}</div>
+                  <span className={`text-xs hidden sm:block ${i === step ? "text-orange-500 font-semibold" : "text-gray-400"}`}>{t}</span>
+                  {i < 4 && <div className="h-0.5 bg-gray-200 flex-1" />}
+                </div>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+              {step === 0 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-4">1. Informations sur l&apos;opérateur</h3>
+                  <F label="Raison sociale / Nom de l'opérateur *" id="operateurNom" value={form.operateurNom} onChange={set} placeholder="Société Dupont Aérien SAS" />
+                  <F label="N° SIREN / Enregistrement AlphaTango" id="operateurSiren" value={form.operateurSiren} onChange={set} placeholder="123 456 789" />
+                  <F label="Adresse du siège social" id="operateurAdresse" value={form.operateurAdresse} onChange={set} placeholder="15 rue de la Paix, 75001 Paris" />
+                  <F label="Email de contact" id="operateurEmail" value={form.operateurEmail} onChange={set} placeholder="contact@societe.fr" type="email" />
+                  <F label="Téléphone" id="operateurTel" value={form.operateurTel} onChange={set} placeholder="+33 6 12 34 56 78" />
+                </div>
+              )}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-4">2. Télépilote responsable (RPIC)</h3>
+                  <F label="Nom et prénom du RPIC *" id="rpicNom" value={form.rpicNom} onChange={set} placeholder="Jean Dupont" />
+                  <F label="N° de brevet / certificat CATS" id="rpicBrevet" value={form.rpicBrevet} onChange={set} placeholder="CATS-2024-XXXXX" />
+                  <F label="Expérience de vol (heures)" id="rpicExperience" value={form.rpicExperience} onChange={set} placeholder="150" type="number" />
+                </div>
+              )}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-4">3. Système UAS</h3>
+                  <F label="Fabricant / Marque *" id="uasMarque" value={form.uasMarque} onChange={set} placeholder="DJI, Delair, etc." />
+                  <F label="Modèle *" id="uasModele" value={form.uasModele} onChange={set} placeholder="Matrice 350 RTK" />
+                  <F label="Numéro de série" id="uasNumeroSerie" value={form.uasNumeroSerie} onChange={set} placeholder="SN-XXXXXXXXXX" />
+                  <F label="Masse au décollage (kg)" id="uasMasse" value={form.uasMasse} onChange={set} placeholder="6.5" type="number" />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">Classe EASA</label>
+                    <select value={form.uasClasse} onChange={e => set("uasClasse", e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                      <option value="C5">C5 — STS-01 (zones peuplées)</option>
+                      <option value="C6">C6 — STS-02 (BVLOS, zones peu peuplées)</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={form.uasParachute} onChange={e => set("uasParachute", e.target.checked)} className="w-4 h-4 accent-orange-500" />
+                      Parachute homologué
+                    </label>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={form.uasFts} onChange={e => set("uasFts", e.target.checked)} className="w-4 h-4 accent-orange-500" />
+                      Système de fin de vol (FTS)
+                    </label>
+                  </div>
+                </div>
+              )}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-4">4. Description de l&apos;opération</h3>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">Scénario standard</label>
+                    <select value={form.scenario} onChange={e => set("scenario", e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
+                      <option value="STS-01">STS-01 — Zones urbaines peuplées (C5, VLOS, &lt;120m)</option>
+                      <option value="STS-02">STS-02 — Zones peu peuplées (C6, BVLOS, &lt;120m)</option>
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-medium text-gray-700">Description de la zone opérationnelle</label>
+                    <textarea value={form.zoneDescription} onChange={e => set("zoneDescription", e.target.value)}
+                      placeholder="Ex: Zone industrielle, centre-ville Lyon, chantier BTP..."
+                      rows={3} className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+                  </div>
+                  <F label="Hauteur maximale de vol (m AGL)" id="hauteurMax" value={form.hauteurMax} onChange={set} placeholder="120" type="number" />
+                  <F label="Distance zone tampon GRB (m)" id="grbDistance" value={form.grbDistance} onChange={set} placeholder="30" type="number" />
+                </div>
+              )}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-4">5. Contact d&apos;urgence</h3>
+                  <F label="Nom et prénom *" id="contactUrgenceNom" value={form.contactUrgenceNom} onChange={set} placeholder="Marie Dupont" />
+                  <F label="Téléphone d'urgence *" id="contactUrgenceTel" value={form.contactUrgenceTel} onChange={set} placeholder="+33 6 98 76 54 32" />
+                  <F label="Rôle / Fonction" id="contactUrgenceRole" value={form.contactUrgenceRole} onChange={set} placeholder="Directeur des opérations" />
+                  <div className="bg-orange-50 rounded-xl p-4 mt-4">
+                    <p className="text-sm text-orange-700 font-medium">✓ Prêt à générer votre MANEX complet</p>
+                    <p className="text-xs text-orange-600 mt-1">Vérifiez vos informations avant de générer le document.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation */}
+              <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
+                {step > 0
+                  ? <button onClick={() => setStep(s => s - 1)} className="px-6 py-2 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 transition-colors">← Précédent</button>
+                  : <div />
+                }
+                {step < 4
+                  ? <button onClick={() => setStep(s => s + 1)} className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors text-sm">Suivant →</button>
+                  : <button onClick={generate} className="px-8 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition-colors text-sm">Générer le MANEX ✓</button>
+                }
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Pourquoi */}
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8">Pourquoi un MANEX personnalisé ?</h2>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { icon: "🔒", title: "Sécurité :", desc: "Garantit une exploitation sécurisée de vos drones." },
+                { icon: "✅", title: "Conformité :", desc: "Respecte les normes et réglementations drone en vigueur." },
+                { icon: "⚡", title: "Efficacité :", desc: "Plus besoin de rechercher pendant des heures un exemple de Manex pour votre exploitation drone. Simplifiez vos opérations quotidiennes et la gestion des risques." },
+              ].map(c => (
+                <div key={c.title} className="bg-gray-50 rounded-xl p-5">
+                  <div className="text-2xl mb-2">{c.icon}</div>
+                  <h3 className="font-bold text-gray-900 mb-1">{c.title}</h3>
+                  <p className="text-sm text-gray-600">{c.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Le MANEX drone */}
+        <section className="py-12 px-4 bg-gray-50">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Le MANEX drone</h2>
+            <p className="text-gray-700 text-sm mb-4">
+              Le MANEX est un document incontournable pour les exploitants en catégorie spécifique. Il doit être rédigé avec soin.
+            </p>
+            <p className="text-sm text-gray-600 mb-6">
+              N&apos;hésitez pas à nous joindre, nous sommes là pour vous. Obtenez votre MANEX personnalisé maintenant. Commandez dès aujourd&apos;hui et assurez-vous une exploitation sécurisée et conforme.
+            </p>
+            <button onClick={() => document.getElementById("form-section")?.scrollIntoView({ behavior: "smooth" })}
+              className="inline-block bg-orange-500 text-white font-bold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors">
+              Commencer maintenant
+            </button>
+          </div>
+        </section>
+
+        <footer className="bg-white border-t border-gray-200 py-8 px-4">
+          <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-4 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              {["FAQ", "CGV – CGU", "CGV – CGU Partenaire", "Données personnelles", "Handicap", "Actualités", "Plan du site"].map(l => (
+                <a key={l} href="#" className="hover:text-orange-500 transition-colors">{l}</a>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400">contact@certifdrone.fr · Mentions légales · copyright 2026</p>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }
