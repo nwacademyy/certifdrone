@@ -28,7 +28,7 @@ const tools = [
     description: "Créez votre Manuel d'Exploitation conforme EASA en 15 min. Formulaire guidé → document professionnel à déposer sur AlphaTango.",
     href: "/outils/manex",
     badge: "CATS exclusif",
-    badgeColor: "bg-orange-100 text-orange-700",
+    badgeColor: "bg-violet-100 text-violet-700",
     available: true,
   },
   {

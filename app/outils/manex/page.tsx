@@ -24,7 +24,7 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
       />
     </div>
   );
@@ -43,7 +43,7 @@ function Select({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 bg-white"
       >
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -66,7 +66,7 @@ function Textarea({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={rows}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400 resize-y"
       />
     </div>
   );
@@ -77,7 +77,7 @@ function Toggle({ label, checked, onChange }: { label: string; checked: boolean;
     <label className="flex items-center gap-3 cursor-pointer mb-4">
       <div
         onClick={() => onChange(!checked)}
-        className={`relative w-12 h-6 rounded-full transition-colors ${checked ? "bg-orange-500" : "bg-gray-300"}`}
+        className={`relative w-12 h-6 rounded-full transition-colors ${checked ? "bg-violet-600" : "bg-gray-300"}`}
       >
         <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : ""}`} />
       </div>
@@ -119,7 +119,7 @@ function UASForm({ uas, onChange, idx }: { uas: UAS; onChange: (u: UAS) => void;
   return (
     <div className="border border-gray-200 rounded-xl p-5 mb-4 bg-gray-50">
       <h4 className="font-bold text-gray-800 mb-4">UAS {idx + 1}</h4>
-      <div className="grid grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <Field label="Désignation / Nom du drone" value={uas.nom} onChange={set("nom")} placeholder="Ex: DJI Mini 3 Pro" required />
         <Field label="Fabricant" value={uas.fabricant} onChange={set("fabricant")} placeholder="Ex: DJI" />
         <Select label="Type" value={uas.type} onChange={set("type")} options={[
@@ -165,7 +165,7 @@ function PiloteForm({ p, onChange, idx }: { p: Pilote; onChange: (p: Pilote) => 
   return (
     <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
       <h5 className="font-semibold text-gray-700 mb-3">Pilote {idx + 1}</h5>
-      <div className="grid grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <Field label="Nom complet" value={p.nom} onChange={set("nom")} placeholder="Prénom Nom" required />
         <Field label="N° immatriculation" value={p.immatriculation} onChange={set("immatriculation")} placeholder="UAS-FR-XXXXXXXXX" />
         <Field label="Modèles UAS autorisés" value={p.modelesUAS} onChange={set("modelesUAS")} placeholder="DJI Mini 3, Matrice 350..." />
@@ -185,7 +185,7 @@ function MaintenanceForm({ p, onChange, idx, title }: { p: PersonnelMaintenance;
   return (
     <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
       <h5 className="font-semibold text-gray-700 mb-3">{title} {idx + 1}</h5>
-      <div className="grid grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <Field label="Nom complet" value={p.nom} onChange={set("nom")} placeholder="Prénom Nom" />
         <Field label="Modèles UAS" value={p.modelesUAS} onChange={set("modelesUAS")} placeholder="DJI Mini 3, Matrice 350..." />
         <Field label="Type autorisation" value={p.typeAutorisation} onChange={set("typeAutorisation")} placeholder="Permanente / Limitée..." />
@@ -202,7 +202,7 @@ function EssaiForm({ e, onChange, idx }: { e: EssaiVol; onChange: (e: EssaiVol) 
   return (
     <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
       <h5 className="font-semibold text-gray-700 mb-3">Essai {idx + 1}</h5>
-      <div className="grid grid-cols-2 gap-x-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
         <Field label="Date" value={e.date} onChange={set("date")} type="date" />
         <Field label="Référence" value={e.reference} onChange={set("reference")} placeholder="S01-01-001" />
         <Select label="Type" value={e.type} onChange={(v) => onChange({ ...e, type: v as "Simulé" | "Réel" })} options={[
@@ -281,7 +281,7 @@ export default function ManexPage() {
       {/* Hero */}
       <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-10 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
             ✦ SAIL II — Conforme EASA EU 2019/947
           </div>
           <h1 className="text-3xl font-black mb-3">Générateur de MANEX</h1>
@@ -299,7 +299,7 @@ export default function ManexPage() {
               key={s.id}
               onClick={() => setStep(i)}
               className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                i === step ? "bg-orange-500 text-white shadow-md" :
+                i === step ? "bg-violet-600 text-white shadow-md" :
                 i < step ? "bg-green-100 text-green-700" :
                 "bg-gray-200 text-gray-500"
               }`}
@@ -318,20 +318,20 @@ export default function ManexPage() {
           {step === 0 && (
             <>
               <SectionTitle icon="🏢" title="Informations de l&apos;opérateur" sub="Ces données figureront sur la page de couverture du MANEX" />
-              <div className="grid grid-cols-2 gap-x-4">
-                <div className="col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                <div className="col-span-1 sm:col-span-2">
                   <Field label="Nom de l'opérateur / Raison sociale" value={data.operateurNom} onChange={set("operateurNom")} placeholder="ACME Drone SAS" required />
                 </div>
                 <Field label="SIRET" value={data.operateurSiret} onChange={set("operateurSiret")} placeholder="83987009400027" required />
                 <Field label="N° AlphaTango" value={data.operateurNumAlphaTango} onChange={set("operateurNumAlphaTango")} placeholder="FRAxxxxxxxxx" sublabel="Identifiant DGAC (alphaTango.fr)" required />
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Field label="Adresse" value={data.operateurAdresse} onChange={set("operateurAdresse")} placeholder="139 impasse de l'Église" required />
                 </div>
                 <Field label="Code postal" value={data.operateurCodePostal} onChange={set("operateurCodePostal")} placeholder="76970" />
                 <Field label="Ville" value={data.operateurVille} onChange={set("operateurVille")} placeholder="Gremonville" />
                 <Field label="Pays" value={data.operateurPays} onChange={set("operateurPays")} placeholder="France" />
                 <Field label="E-mail" value={data.operateurEmail} onChange={set("operateurEmail")} placeholder="contact@maSociete.fr" type="email" />
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Field label="Téléphone" value={data.operateurTel} onChange={set("operateurTel")} placeholder="+33 6 00 00 00 00" />
                 </div>
                 <Field label="Date de création du MANEX" value={data.dateCreation} onChange={set("dateCreation")} type="date" />
@@ -343,9 +343,9 @@ export default function ManexPage() {
           {step === 1 && (
             <>
               <SectionTitle icon="👥" title="Organisation de la société" sub="Section 1.4 du MANEX — Description et organigramme" />
-              <div className="grid grid-cols-2 gap-x-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Field label="Année de fondation" value={data.societeAnneeCreation} onChange={set("societeAnneeCreation")} placeholder="2024" />
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Field
                     label="Domaines d'activité"
                     sublabel="Liste les activités séparées par des virgules"
@@ -365,7 +365,7 @@ export default function ManexPage() {
               />
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
                 <p className="text-xs text-blue-700 font-medium mb-3">📌 Organigramme — les rôles peuvent être cumulés par une même personne</p>
-                <div className="grid grid-cols-2 gap-x-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                   {[
                     ["Accountable Manager", "accountableManager", "Gestionnaire responsable"],
                     ["Safety Manager", "safetyManager", "Responsable sécurité"],
@@ -417,7 +417,7 @@ export default function ManexPage() {
               {data.uas.length < 4 && (
                 <button
                   onClick={addUAS}
-                  className="w-full border-2 border-dashed border-orange-300 rounded-xl py-3 text-orange-500 font-semibold text-sm hover:bg-orange-50 transition-colors"
+                  className="w-full border-2 border-dashed border-violet-300 rounded-xl py-3 text-violet-600 font-semibold text-sm hover:bg-violet-50 transition-colors"
                 >
                   + Ajouter un drone
                 </button>
@@ -430,9 +430,9 @@ export default function ManexPage() {
             <>
               <SectionTitle icon="🗺️" title="Zones de vol" sub="Partie C du MANEX — définir les zones opérationnelles et scénarios" />
 
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-5">
-                <p className="text-xs font-semibold text-orange-700 mb-1">Limites opérationnelles générales</p>
-                <div className="grid grid-cols-3 gap-x-4">
+              <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-5">
+                <p className="text-xs font-semibold text-violet-700 mb-1">Limites opérationnelles générales</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-4">
                   <Field label="Vent max (m/s)" value={data.zone1VentMax} onChange={set("zone1VentMax")} placeholder="8" />
                   <Field label="Visibilité min (km)" value={data.zone1VisibiliteMin} onChange={set("zone1VisibiliteMin")} placeholder="5" />
                   <Field label="Température min (°C)" value={data.zone1TempMin} onChange={set("zone1TempMin")} placeholder="-10" />
@@ -441,7 +441,7 @@ export default function ManexPage() {
               </div>
 
               <h3 className="font-bold text-gray-800 mb-3">Zone de vol 1 (principale)</h3>
-              <div className="grid grid-cols-2 gap-x-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Select label="Scénario" value={data.zone1Scenario} onChange={set("zone1Scenario")} options={[
                   { value: "STS-01", label: "STS-01 (C5 · Zones peuplées · VLOS)" },
                   { value: "STS-02", label: "STS-02 (C6 · Zones peu peuplées · BVLOS)" },
@@ -475,7 +475,7 @@ export default function ManexPage() {
                 {data.zone2Active && (
                   <>
                     <h3 className="font-bold text-gray-800 mb-3">Zone de vol 2</h3>
-                    <div className="grid grid-cols-2 gap-x-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                       <Select label="Scénario" value={data.zone2Scenario} onChange={set("zone2Scenario")} options={[
                         { value: "STS-01", label: "STS-01" },
                         { value: "STS-02", label: "STS-02" },
@@ -547,7 +547,7 @@ export default function ManexPage() {
                 <p className="text-xs text-red-700 font-semibold mb-2">⚠ Contacts d&apos;urgence locaux</p>
                 <p className="text-xs text-red-600 mb-3">À remplir pour chaque zone de vol. Ces numéros figureront dans la checklist ERP à emporter sur le terrain.</p>
               </div>
-              <div className="grid grid-cols-2 gap-x-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
                 <Field label="Aérodrome / Aéroport le plus proche" value={data.erpAerodrome} onChange={set("erpAerodrome")} placeholder="Aérodrome de Dieppe-Saint-Aubin" />
                 <Field label="Téléphone aérodrome" value={data.erpAerodromeTel} onChange={set("erpAerodromeTel")} placeholder="+33 2 35 46 09 02" />
                 <Field label="Contrôleurs ATC concernés" value={data.erpATC} onChange={set("erpATC")} placeholder="Paris Information / Brest Contrôle" />
@@ -565,7 +565,7 @@ export default function ManexPage() {
                 <h3 className="font-bold text-gray-800 mb-2">Procédure email ERP</h3>
                 <p className="text-sm text-gray-600 mb-3">
                   Avant chaque vol, le RPIC envoie un email au siège :{" "}
-                  <span className="font-semibold text-orange-600">{data.operateurEmail || "[email siège]"}</span>
+                  <span className="font-semibold text-violet-600">{data.operateurEmail || "[email siège]"}</span>
                   {" "}avec objet <span className="font-mono text-xs bg-gray-100 px-1 rounded">ERP, [date de vol]</span> et la photo de la checklist ERP signée.
                 </p>
               </div>
@@ -607,7 +607,7 @@ export default function ManexPage() {
                   ["§8.5", "Déclaration de conformité signée"],
                 ].map(([ref, desc]) => (
                   <div key={ref} className="flex items-center gap-3 py-2 border-b border-gray-100">
-                    <span className="text-xs font-mono text-orange-600 bg-orange-50 px-2 py-0.5 rounded flex-shrink-0">{ref}</span>
+                    <span className="text-xs font-mono text-violet-600 bg-violet-50 px-2 py-0.5 rounded flex-shrink-0">{ref}</span>
                     <span className="text-sm text-gray-600">{desc}</span>
                     <span className="ml-auto text-green-500 text-xs">✓ Auto</span>
                   </div>
@@ -656,7 +656,7 @@ export default function ManexPage() {
               <button
                 onClick={generate}
                 disabled={loading || !data.operateurNom}
-                className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-base transition-all flex items-center justify-center gap-3"
+                className="w-full bg-violet-600 hover:bg-violet-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-base transition-all flex items-center justify-center gap-3"
               >
                 {loading ? (
                   <>
@@ -691,7 +691,7 @@ export default function ManexPage() {
           {step < STEPS.length - 1 && (
             <button
               onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}
-              className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+              className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-sm font-semibold transition-colors"
             >
               Suivant →
             </button>

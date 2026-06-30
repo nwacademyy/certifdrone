@@ -8,15 +8,15 @@ export default function BapdOpen() {
       <main className="pt-16">
 
         {/* Hero */}
-        <section className="bg-gradient-to-br from-orange-50 to-white py-16 px-4">
+        <section className="bg-gradient-to-br from-violet-50 to-white py-16 px-4">
           <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                L&apos;examen drone<br />
-                Catégorie <span className="text-orange-500">OPEN EUROPE</span>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                L&apos;examen drone 
+                Catégorie <span className="text-violet-600">OPEN EUROPE</span>
               </h1>
               <p className="text-gray-600 text-lg mb-6">Avec CertifDrone.fr, entraînez-vous pour l&apos;obtention de votre théorique drone BAPD</p>
-              <Link href="/inscription" className="inline-block bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors shadow-md">Inscription</Link>
+              <Link href="/inscription" className="inline-block bg-violet-600 text-white font-semibold px-8 py-3 rounded-full hover:bg-violet-700 transition-colors shadow-md">Inscription</Link>
             </div>
             <div className="flex-1 max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
               <p className="font-semibold text-gray-800 mb-4">Les aérodynes sont des aéronefs :</p>
@@ -41,7 +41,7 @@ export default function BapdOpen() {
         <section className="py-12 px-4 bg-white border-b border-gray-100">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Ce que vous apporte la licence EASA</h2>
-            <p className="text-orange-500 font-bold text-lg">CATÉGORIE OPEN EUROPE : A1-A2-A3</p>
+            <p className="text-violet-600 font-bold text-lg">CATÉGORIE OPEN EUROPE : A1-A2-A3</p>
           </div>
         </section>
 
@@ -73,7 +73,7 @@ export default function BapdOpen() {
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
                   <h3 className="font-bold text-gray-800 mb-1">Coût</h3>
-                  <p className="text-sm text-gray-600">La préparation au certificat (BAPD) A1-A3 et A2 coûte <strong className="text-orange-500">29,90€</strong> (TVA inc.) chez CertifDrone.fr. Accès à l&apos;ensemble des cours, QCM et examens blancs.</p>
+                  <p className="text-sm text-gray-600">La préparation au certificat (BAPD) A1-A3 et A2 coûte <strong className="text-violet-600">29,90€</strong> (TVA inc.) chez CertifDrone.fr. Accès à l&apos;ensemble des cours, QCM et examens blancs.</p>
                 </div>
                 <div className="bg-white rounded-xl border border-gray-200 p-5">
                   <h3 className="font-bold text-gray-800 mb-1">Examen</h3>
@@ -90,11 +90,11 @@ export default function BapdOpen() {
 
             {/* Pricing card */}
             <div className="lg:w-72 flex-shrink-0">
-              <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 shadow-lg sticky top-24">
+              <div className="bg-white rounded-2xl border-2 border-violet-200 p-6 shadow-lg sticky top-24">
                 <div className="text-center mb-4">
                   <div className="text-sm text-gray-500 mb-1">La catégorie</div>
                   <div className="text-xl font-bold text-gray-900">OPEN EUROPE</div>
-                  <div className="text-4xl font-extrabold text-orange-500 mt-2">29,90€</div>
+                  <div className="text-4xl font-extrabold text-violet-600 mt-2">29,90€</div>
                   <div className="text-xs text-gray-400 mb-4">TVA incluse</div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm border-t border-gray-100 pt-4">
@@ -117,7 +117,7 @@ export default function BapdOpen() {
                     </ul>
                   </div>
                 </div>
-                <Link href="/inscription" className="block text-center bg-orange-500 text-white font-semibold py-3 rounded-full hover:bg-orange-600 transition-colors">Démarrer l&apos;entraînement</Link>
+                <Link href="/inscription" className="block text-center bg-violet-600 text-white font-semibold py-3 rounded-full hover:bg-violet-700 transition-colors">Démarrer l&apos;entraînement</Link>
               </div>
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function BapdOpen() {
                 { classe: "CLASSE C3", drones: ["DJI Matrice 350 RTK", "Quantum-Systems Trinity F90+", "WingtraOne"] },
               ].map(({ classe, drones }) => (
                 <div key={classe} className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="font-bold text-gray-900 mb-3 text-orange-600">{classe}</h3>
+                  <h3 className="font-bold text-gray-900 mb-3 text-violet-600">{classe}</h3>
                   <ul className="space-y-1">
                     {drones.map(d => <li key={d} className="text-sm text-gray-700">• {d}</li>)}
                   </ul>
@@ -165,7 +165,7 @@ export default function BapdOpen() {
                     "la sûreté",
                   ].map((s, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-orange-400 font-semibold flex-shrink-0">{i + 1}.</span>
+                      <span className="text-violet-500 font-semibold flex-shrink-0">{i + 1}.</span>
                       <span>{s}</span>
                     </li>
                   ))}
@@ -180,12 +180,12 @@ export default function BapdOpen() {
                     "l'isolement de la zone survolée",
                   ].map((s, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-orange-400 font-semibold flex-shrink-0">{i + 1}.</span>
+                      <span className="text-violet-500 font-semibold flex-shrink-0">{i + 1}.</span>
                       <span>{s}</span>
                     </li>
                   ))}
                 </ol>
-                <div className="mt-6 p-4 bg-orange-50 rounded-lg">
+                <div className="mt-6 p-4 bg-violet-50 rounded-lg">
                   <p className="text-xs text-gray-600">Pour préparer l&apos;examen A2, vous devez avoir obtenu préalablement l&apos;examen A1-A3. Une auto-formation pratique est également obligatoire.</p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function BapdOpen() {
           <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-4 text-sm text-gray-500">
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {["FAQ", "CGV – CGU", "CGV – CGU Partenaire", "Données personnelles", "Handicap", "Actualités", "Plan du site"].map(l => (
-                <a key={l} href="#" className="hover:text-orange-500 transition-colors">{l}</a>
+                <a key={l} href="#" className="hover:text-violet-600 transition-colors">{l}</a>
               ))}
             </div>
             <p className="text-xs text-gray-400">contact@certifdrone.fr · Mentions légales · copyright 2026</p>

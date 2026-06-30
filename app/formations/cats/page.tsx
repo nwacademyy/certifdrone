@@ -19,15 +19,15 @@ export default function CatsPage() {
       <main className="pt-16">
 
         {/* Hero */}
-        <section className="bg-gradient-to-br from-orange-50 to-white py-16 px-4">
+        <section className="bg-gradient-to-br from-violet-50 to-white py-16 px-4">
           <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                L&apos;examen drone<br />
-                Catégorie <span className="text-orange-500">Spécifique EUROPE</span>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                L&apos;examen drone 
+                Catégorie <span className="text-violet-600">Spécifique EUROPE</span>
               </h1>
               <p className="text-gray-600 text-lg mb-6">Avec CertifDrone.fr, entraînez-vous pour l&apos;obtention de votre théorique drone STS (CATS)</p>
-              <Link href="/inscription" className="inline-block bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors shadow-md">Inscription</Link>
+              <Link href="/inscription" className="inline-block bg-violet-600 text-white font-semibold px-8 py-3 rounded-full hover:bg-violet-700 transition-colors shadow-md">Inscription</Link>
             </div>
             <div className="flex-1 max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
               <p className="font-semibold text-gray-800 mb-4">Les aérodynes sont des aéronefs :</p>
@@ -61,14 +61,14 @@ export default function CatsPage() {
               <p className="text-gray-700 text-sm mb-4">
                 Ce diplôme théorique, appelé CATS en France, est indispensable pour piloter un drone selon les règles de l&apos;EASA, dans les scénarios standard européens STS-01 et STS-02. Grâce à notre partenaire exclusif EuroUSC-Benelux, agréé par la RDW, vous pouvez accéder à cette épreuve en ligne, depuis le confort de votre domicile. Préparez-vous dès aujourd&apos;hui avec des outils de formation adaptés pour garantir votre réussite et obtenir une certification reconnue dans toute l&apos;Europe.
               </p>
-              <p className="text-sm font-semibold text-orange-600">Le STS Théorique (CATS), un impératif pour les scénarios européens.</p>
+              <p className="text-sm font-semibold text-violet-600">Le STS Théorique (CATS), un impératif pour les scénarios européens.</p>
             </div>
 
             {/* Pricing card inline */}
-            <div className="mt-8 bg-orange-50 border-2 border-orange-200 rounded-2xl p-6 max-w-sm">
+            <div className="mt-8 bg-violet-50 border-2 border-violet-200 rounded-2xl p-6 max-w-sm">
               <div className="text-sm text-gray-500 mb-1">Examen théorique STS (CATS)</div>
               <div className="text-xl font-bold text-gray-900 mb-1">Passage en ligne</div>
-              <div className="text-4xl font-extrabold text-orange-500 mb-4">190,00€</div>
+              <div className="text-4xl font-extrabold text-violet-600 mb-4">190,00€</div>
               <div className="grid grid-cols-2 gap-3 text-xs text-gray-700 mb-5">
                 <div className="bg-white rounded-lg p-3">
                   <div className="font-semibold text-gray-900 mb-1">L&apos;examen théorique</div>
@@ -87,7 +87,7 @@ export default function CatsPage() {
                   </ul>
                 </div>
               </div>
-              <Link href="/inscription" className="block text-center bg-orange-500 text-white font-semibold py-3 rounded-full hover:bg-orange-600 transition-colors text-sm">Passer l&apos;examen</Link>
+              <Link href="/inscription" className="block text-center bg-violet-600 text-white font-semibold py-3 rounded-full hover:bg-violet-700 transition-colors text-sm">Passer l&apos;examen</Link>
             </div>
           </div>
         </section>
@@ -116,7 +116,7 @@ export default function CatsPage() {
               </div>
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="font-bold text-gray-800 mb-2">Coût</h3>
-                <p className="text-sm text-gray-600">La préparation au certificat théorique STS (CATS) STS-01 et STS-02 coûte <strong className="text-orange-500">49,90€</strong>. L&apos;examen STS théorique se passe en ligne sur CertifDrone.fr, en partenariat avec EuroUSC-Benelux, un centre agréé par la RDW (Pays-Bas), et coûte <strong className="text-orange-500">190€</strong>.</p>
+                <p className="text-sm text-gray-600">La préparation au certificat théorique STS (CATS) STS-01 et STS-02 coûte <strong className="text-violet-600">49,90€</strong>. L&apos;examen STS théorique se passe en ligne sur CertifDrone.fr, en partenariat avec EuroUSC-Benelux, un centre agréé par la RDW (Pays-Bas), et coûte <strong className="text-violet-600">190€</strong>.</p>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 p-5">
                 <h3 className="font-bold text-gray-800 mb-2">Examen</h3>
@@ -130,11 +130,11 @@ export default function CatsPage() {
 
             {/* STS Card */}
             <div className="lg:w-72 flex-shrink-0">
-              <div className="bg-white rounded-2xl border-2 border-orange-200 p-6 shadow-lg sticky top-24">
+              <div className="bg-white rounded-2xl border-2 border-violet-200 p-6 shadow-lg sticky top-24">
                 <div className="text-center mb-4">
                   <div className="text-sm text-gray-500 mb-1">La catégorie</div>
                   <div className="text-xl font-bold text-gray-900">SPÉCIFIQUE EUROPE</div>
-                  <div className="text-4xl font-extrabold text-orange-500 mt-2">49,90€</div>
+                  <div className="text-4xl font-extrabold text-violet-600 mt-2">49,90€</div>
                   <div className="text-xs text-gray-400 mb-4">formation · TVA incluse</div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mb-4 text-xs text-gray-700 border-t border-gray-100 pt-4">
@@ -157,7 +157,7 @@ export default function CatsPage() {
                     </ul>
                   </div>
                 </div>
-                <Link href="/inscription" className="block text-center bg-orange-500 text-white font-semibold py-3 rounded-full hover:bg-orange-600 transition-colors">Démarrer l&apos;entraînement</Link>
+                <Link href="/inscription" className="block text-center bg-violet-600 text-white font-semibold py-3 rounded-full hover:bg-violet-700 transition-colors">Démarrer l&apos;entraînement</Link>
               </div>
             </div>
           </div>
@@ -167,11 +167,11 @@ export default function CatsPage() {
         <section className="py-16 px-4 bg-white">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Passage de l&apos;examen théorique STS (CATS) avec CertifDrone.fr</h2>
-            <p className="text-orange-500 font-semibold mb-8">On vous explique tout</p>
+            <p className="text-violet-600 font-semibold mb-8">On vous explique tout</p>
             <div className="space-y-4">
               {steps.map((s) => (
                 <div key={s.n} className="bg-gray-50 rounded-xl border border-gray-200 p-5 flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.n}</div>
+                  <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.n}</div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">{s.title}</h3>
                     <p className="text-sm text-gray-600">{s.desc}</p>
@@ -188,11 +188,11 @@ export default function CatsPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Les drones compatibles pour la catégorie SPÉCIFIQUE EUROPE</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="font-bold text-orange-600 mb-3">CLASSE C5</h3>
+                <h3 className="font-bold text-violet-600 mb-3">CLASSE C5</h3>
                 <p className="text-sm text-gray-500 italic">Drones certifiés conformes classe C5 EASA</p>
               </div>
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="font-bold text-orange-600 mb-3">CLASSE C6</h3>
+                <h3 className="font-bold text-violet-600 mb-3">CLASSE C6</h3>
                 <ul className="space-y-1 text-sm text-gray-700">
                   <li>• Delair UX 11</li>
                 </ul>
@@ -219,7 +219,7 @@ export default function CatsPage() {
                   "les mesures d'atténuation technique et opérationnelle des risques en vol",
                 ].map((s, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-orange-400 font-semibold flex-shrink-0">{i + 1}.</span>
+                    <span className="text-violet-500 font-semibold flex-shrink-0">{i + 1}.</span>
                     <span>{s}</span>
                   </li>
                 ))}
@@ -232,7 +232,7 @@ export default function CatsPage() {
           <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-4 text-sm text-gray-500">
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {["FAQ", "CGV – CGU", "CGV – CGU Partenaire", "Données personnelles", "Handicap", "Actualités", "Plan du site"].map(l => (
-                <a key={l} href="#" className="hover:text-orange-500 transition-colors">{l}</a>
+                <a key={l} href="#" className="hover:text-violet-600 transition-colors">{l}</a>
               ))}
             </div>
             <p className="text-xs text-gray-400">contact@certifdrone.fr · Mentions légales · copyright 2026</p>

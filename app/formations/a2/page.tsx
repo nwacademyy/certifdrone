@@ -19,19 +19,19 @@ export default function BapdA2() {
       <main className="pt-16">
 
         {/* Hero */}
-        <section className="bg-gradient-to-br from-orange-50 to-white py-16 px-4">
+        <section className="bg-gradient-to-br from-violet-50 to-white py-16 px-4">
           <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
             <div className="flex-1">
-              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
-                Passez votre examen théorique pour obtenir votre certification de pilote de drone <span className="text-orange-500">A2 en ligne</span> maintenant !
+              <h1 className="text-3xl lg:text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+                Passez votre examen théorique pour obtenir votre certification de pilote de drone <span className="text-violet-600">A2 en ligne</span> maintenant !
               </h1>
               <p className="text-gray-600 text-lg mb-6">Passez votre BAPD A2 pour les télépilotes de drone en ligne dès maintenant grâce à notre partenaire EuroUSC-Benelux, agréé par la RDW.</p>
-              <Link href="/inscription" className="inline-block bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors shadow-md">Inscription</Link>
+              <Link href="/inscription" className="inline-block bg-violet-600 text-white font-semibold px-8 py-3 rounded-full hover:bg-violet-700 transition-colors shadow-md">Inscription</Link>
             </div>
-            <div className="flex-1 max-w-xs w-full bg-white rounded-2xl shadow-xl border-2 border-orange-200 p-6 text-center">
+            <div className="flex-1 max-w-xs w-full bg-white rounded-2xl shadow-xl border-2 border-violet-200 p-6 text-center">
               <div className="text-sm text-gray-500 mb-1">Examen BAPD A2</div>
               <div className="text-xl font-bold text-gray-900 mb-3">Passage en ligne</div>
-              <div className="text-4xl font-extrabold text-orange-500 mb-4">79,00€</div>
+              <div className="text-4xl font-extrabold text-violet-600 mb-4">79,00€</div>
               <div className="grid grid-cols-2 gap-3 text-xs text-gray-700 mb-5">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="font-semibold text-gray-900 mb-1">L&apos;examen théorique</div>
@@ -50,7 +50,7 @@ export default function BapdA2() {
                   </ul>
                 </div>
               </div>
-              <Link href="/inscription" className="block text-center bg-orange-500 text-white font-semibold py-3 rounded-full hover:bg-orange-600 transition-colors text-sm">Passer l&apos;examen</Link>
+              <Link href="/inscription" className="block text-center bg-violet-600 text-white font-semibold py-3 rounded-full hover:bg-violet-700 transition-colors text-sm">Passer l&apos;examen</Link>
             </div>
           </div>
         </section>
@@ -62,7 +62,7 @@ export default function BapdA2() {
               Le BAPD A2 est un certificat théorique indispensable pour piloter un drone en catégorie ouverte, notamment en sous-catégorie A2. Ce certificat vous permet de réaliser des examens et d&apos;opérer dans le cadre des règles établies par l&apos;EASA pour des vols en zone peuplée renforcée. Avec notre partenaire exclusif EuroUSC-Benelux, agréé par la RDW, vous pouvez passer votre examen depuis chez vous.
             </p>
             <p className="text-gray-600 text-sm">
-              L&apos;examen BAPD A2 est proposé au tarif de <strong className="text-orange-500">79€ TTC</strong> et comprend jusqu&apos;à cinq passages pour maximiser vos chances de réussite. Inscrivez-vous dès maintenant pour rejoindre la communauté des télépilotes professionnels de drone opérant dans le respect des réglementations européennes.
+              L&apos;examen BAPD A2 est proposé au tarif de <strong className="text-violet-600">79€ TTC</strong> et comprend jusqu&apos;à cinq passages pour maximiser vos chances de réussite. Inscrivez-vous dès maintenant pour rejoindre la communauté des télépilotes professionnels de drone opérant dans le respect des réglementations européennes.
             </p>
           </div>
         </section>
@@ -71,11 +71,11 @@ export default function BapdA2() {
         <section className="py-16 px-4 bg-gray-50">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Passage de l&apos;examen A2 avec CertifDrone.fr</h2>
-            <p className="text-orange-500 font-semibold mb-8">On vous explique tout</p>
+            <p className="text-violet-600 font-semibold mb-8">On vous explique tout</p>
             <div className="space-y-4">
               {steps.map((s) => (
                 <div key={s.n} className="bg-white rounded-xl border border-gray-200 p-5 flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.n}</div>
+                  <div className="w-8 h-8 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.n}</div>
                   <div>
                     <h3 className="font-bold text-gray-900 mb-1">{s.title}</h3>
                     <p className="text-sm text-gray-600">{s.desc}</p>
@@ -108,7 +108,7 @@ export default function BapdA2() {
                   "l'isolement de la zone survolée",
                 ].map((s, i) => (
                   <li key={i} className="flex gap-2">
-                    <span className="text-orange-400 font-semibold flex-shrink-0">{i + 1}.</span>
+                    <span className="text-violet-500 font-semibold flex-shrink-0">{i + 1}.</span>
                     <span>{s}</span>
                   </li>
                 ))}
@@ -118,13 +118,13 @@ export default function BapdA2() {
         </section>
 
         {/* CTA bottom */}
-        <section className="py-12 px-4 bg-orange-50 border-t border-orange-100">
+        <section className="py-12 px-4 bg-violet-50 border-t border-violet-100">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Prêt à passer votre BAPD A2 ?</h2>
             <p className="text-gray-600 mb-6">5 passages inclus · Diplôme européen RDW · Valable 5 ans</p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link href="/inscription" className="bg-orange-500 text-white font-bold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors">Passer l&apos;examen — 79€</Link>
-              <Link href="/qcm" className="border-2 border-orange-500 text-orange-500 font-bold px-8 py-3 rounded-full hover:bg-orange-50 transition-colors">S&apos;entraîner gratuitement</Link>
+              <Link href="/inscription" className="bg-violet-600 text-white font-bold px-8 py-3 rounded-full hover:bg-violet-700 transition-colors">Passer l&apos;examen — 79€</Link>
+              <Link href="/qcm" className="border-2 border-violet-600 text-violet-600 font-bold px-8 py-3 rounded-full hover:bg-violet-50 transition-colors">S&apos;entraîner gratuitement</Link>
             </div>
           </div>
         </section>
@@ -133,7 +133,7 @@ export default function BapdA2() {
           <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-4 text-sm text-gray-500">
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               {["FAQ", "CGV – CGU", "CGV – CGU Partenaire", "Données personnelles", "Handicap", "Actualités", "Plan du site"].map(l => (
-                <a key={l} href="#" className="hover:text-orange-500 transition-colors">{l}</a>
+                <a key={l} href="#" className="hover:text-violet-600 transition-colors">{l}</a>
               ))}
             </div>
             <p className="text-xs text-gray-400">contact@certifdrone.fr · Mentions légales · copyright 2026</p>
