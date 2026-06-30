@@ -1,613 +1,703 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
-import Nav from "@/components/Nav";
+import {
+  EMPTY_MANEX, EMPTY_UAS, EMPTY_PILOTE, EMPTY_MAINTENANCE, EMPTY_ESSAI,
+  type ManexData, type UAS, type Pilote, type PersonnelMaintenance, type EssaiVol,
+} from "@/lib/manex-types";
 
-type FormData = {
-  // Opérateur
-  operateurNom: string;
-  operateurSiren: string;
-  operateurAdresse: string;
-  operateurEmail: string;
-  operateurTel: string;
-  // RPIC
-  rpicNom: string;
-  rpicBrevet: string;
-  rpicExperience: string;
-  // UAS
-  uasMarque: string;
-  uasModele: string;
-  uasNumeroSerie: string;
-  uasMasse: string;
-  uasClasse: string;
-  uasParachute: boolean;
-  uasFts: boolean;
-  // Opération
-  scenario: "STS-01" | "STS-02";
-  zoneDescription: string;
-  hauteurMax: string;
-  grbDistance: string;
-  // Contacts
-  contactUrgenceNom: string;
-  contactUrgenceTel: string;
-  contactUrgenceRole: string;
-};
-
-const EMPTY: FormData = {
-  operateurNom: "", operateurSiren: "", operateurAdresse: "", operateurEmail: "", operateurTel: "",
-  rpicNom: "", rpicBrevet: "", rpicExperience: "",
-  uasMarque: "", uasModele: "", uasNumeroSerie: "", uasMasse: "", uasClasse: "C5", uasParachute: false, uasFts: false,
-  scenario: "STS-01", zoneDescription: "", hauteurMax: "120", grbDistance: "30",
-  contactUrgenceNom: "", contactUrgenceTel: "", contactUrgenceRole: "",
-};
-
-function F({ label, id, value, onChange, placeholder, type = "text" }: { label: string; id: keyof FormData; value: string; onChange: (id: keyof FormData, v: string) => void; placeholder?: string; type?: string }) {
+// ─── helpers ──────────────────────────────────────────────────────────────────
+function Field({
+  label, sublabel, value, onChange, placeholder, type = "text", required,
+}: {
+  label: string; sublabel?: string; value: string;
+  onChange: (v: string) => void; placeholder?: string;
+  type?: string; required?: boolean;
+}) {
   return (
-    <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
-      <input type={type} value={value} onChange={e => onChange(id, e.target.value)} placeholder={placeholder}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
+    <div className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 mb-1">
+        {label}{required && <span className="text-red-500 ml-1">*</span>}
+      </label>
+      {sublabel && <p className="text-xs text-gray-500 mb-1">{sublabel}</p>}
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+      />
     </div>
   );
 }
 
-function buildManex(d: FormData): string {
-  const today = new Date().toLocaleDateString("fr-FR");
-  return `MANUEL D'EXPLOITATION (MANEX)
-Conforme AMC1 UAS.STS-01/02.020 — EASA Règlement (UE) 2019/947
-Scénario Standard : ${d.scenario}
-Généré le : ${today}
-
-═══════════════════════════════════════════════════════════════
-SECTION 1 — INFORMATIONS SUR L'OPÉRATEUR
-═══════════════════════════════════════════════════════════════
-
-Raison sociale : ${d.operateurNom || "[À compléter]"}
-N° SIREN / enregistrement : ${d.operateurSiren || "[À compléter]"}
-Adresse du siège social : ${d.operateurAdresse || "[À compléter]"}
-Email de contact : ${d.operateurEmail || "[À compléter]"}
-Téléphone : ${d.operateurTel || "[À compléter]"}
-
-Déclarations Légales et Conformité :
-L'opérateur s'engage à respecter toutes les exigences de l'EASA et des scénarios européens ${d.scenario}. L'opérateur confirme être enregistré sur AlphaTango et disposer d'un numéro d'opérateur valide.
-
-═══════════════════════════════════════════════════════════════
-SECTION 2 — STRUCTURE ORGANISATIONNELLE ET RESPONSABILITÉS
-═══════════════════════════════════════════════════════════════
-
-Télépilote Responsable (RPIC) : ${d.rpicNom || "[À compléter]"}
-N° de brevet / certificat : ${d.rpicBrevet || "[À compléter]"}
-Expérience de vol : ${d.rpicExperience || "[À compléter]"} heures
-Rôles et responsabilités :
-  - Vérification de l'espace aérien avant chaque mission
-  - Contrôle pré-vol du système UAS
-  - Décision finale sur le lancement ou l'annulation de la mission
-  - Gestion des situations d'urgence
-
-Qualifications et exigences du personnel :
-  - CATS (STS) obtenu via examen agréé par les autorités aéronautiques
-  - Formation pratique en centre agréé validée
-  - Formation continue : révision annuelle des procédures
-
-═══════════════════════════════════════════════════════════════
-SECTION 3 — SYSTÈME UAS
-═══════════════════════════════════════════════════════════════
-
-Fabricant / Marque : ${d.uasMarque || "[À compléter]"}
-Modèle : ${d.uasModele || "[À compléter]"}
-Numéro de série : ${d.uasNumeroSerie || "[À compléter]"}
-Masse au décollage (MTOM) : ${d.uasMasse || "[À compléter]"} kg
-Classe EASA : ${d.uasClasse}
-Système parachute : ${d.uasParachute ? "OUI — homologué et opérationnel" : "NON"}
-Système de fin de vol (FTS) : ${d.uasFts ? "OUI — opérationnel et testé" : "NON"}
-
-Maintenance et entretien :
-  - Inspection pré-vol : liste de vérification obligatoire (voir Section 5)
-  - Maintenance préventive : selon les recommandations du fabricant
-  - Registre de maintenance tenu à jour (heures de vol, incidents, remplacements)
-  - Tout défaut détecté = arrêt des opérations jusqu'à correction documentée
-
-═══════════════════════════════════════════════════════════════
-SECTION 4 — DESCRIPTION DES OPÉRATIONS
-═══════════════════════════════════════════════════════════════
-
-Scénario applicable : ${d.scenario}
-${d.scenario === "STS-01"
-  ? `Type d'opération : Vols en zones urbaines peuplées (VLOS)
-Classe de drone requise : C5
-Hauteur maximale autorisée : ${d.hauteurMax} m AGL
-Zone tampon au sol (GRB) : ${d.grbDistance} m minimum autour de la zone d'opération
-Conditions spécifiques STS-01 :
-  - Vol en vue directe du télépilote (VLOS) obligatoire
-  - Zone peuplée : application stricte du GRB
-  - Signalisation de la zone opérationnelle requise
-  - Coordination préalable avec les autorités locales si nécessaire`
-  : `Type d'opération : Vols en zones faiblement peuplées (BVLOS jusqu'à +2 km du pilote)
-Classe de drone requise : C6
-Hauteur maximale autorisée : ${d.hauteurMax} m AGL
-Zone tampon au sol (GRB) : ${d.grbDistance} m minimum autour de la zone d'opération
-Conditions spécifiques STS-02 :
-  - Vols hors vue autorisés jusqu'à 2 km du télépilote
-  - Zone faiblement peuplée vérifiée avant opération
-  - Observateur de vol (VO) recommandé pour liaisons hors vue
-  - Coordination avec le gestionnaire d'espace aérien local`}
-
-Description de la zone opérationnelle :
-${d.zoneDescription || "[Décrire la zone : coordonnées GPS, nature du terrain, obstacles, activités riveraines...]"}
-
-Zones de vol et limites opérationnelles :
-  - Espace aérien : vérification via Géoportail et AlphaTango avant chaque mission
-  - Restrictions temporaires : consultées la veille et le jour J
-  - Zones interdites, réglementées et dangereuses : exclues du plan de vol
-
-═══════════════════════════════════════════════════════════════
-SECTION 5 — PROCÉDURES NORMALES
-═══════════════════════════════════════════════════════════════
-
-5.1 — Procédures pré-vol
-  □ Vérification météo (vent < 8 m/s, visibilité > 5 km, pas de précipitations)
-  □ Consultation espace aérien (AlphaTango, Géoportail, NOTAMs)
-  □ Inspection visuelle du drone (châssis, hélices, moteurs, connecteurs)
-  □ Vérification de la charge batterie (≥ 95%)
-  □ Contrôle de la liaison de données (signal RC, vidéo-retour)
-  □ Test du FTS ${d.uasFts ? "✓ OBLIGATOIRE" : "(non applicable)"}
-  □ Test du parachute ${d.uasParachute ? "✓ OBLIGATOIRE" : "(non applicable)"}
-  □ Mise en place du périmètre de sécurité / GRB ${d.grbDistance} m
-  □ Briefing de l'équipe au sol
-
-5.2 — Procédures de vol
-  □ Décollage progressif — vérification stabilité à 5 m AGL
-  □ Montée vers altitude opérationnelle (max ${d.hauteurMax} m AGL)
-  □ Surveillance continue de la position et du comportement UAS
-  □ Contrôle régulier de la charge batterie (RTH si < 30%)
-  □ Maintien du contact radio avec l'équipe au sol
-
-5.3 — Procédures post-vol
-  □ Atterrissage contrôlé dans la zone désignée
-  □ Sécurisation du drone (moteurs arrêtés, batteries retirées)
-  □ Inspection post-vol (dommages, usure hélices)
-  □ Enregistrement dans le registre de vol (durée, zone, anomalies)
-  □ Rapport d'incident si nécessaire
-
-═══════════════════════════════════════════════════════════════
-SECTION 6 — PROCÉDURES DE CONTINGENCE
-═══════════════════════════════════════════════════════════════
-
-Perte de liaison de données (signal RC perdu) :
-  → Le drone exécute le mode RTH (Return to Home) automatiquement
-  → Si non résolu en 30 secondes : activation de la procédure d'atterrissage d'urgence
-  → Notification immédiate à ${d.contactUrgenceNom || "la personne de contact d'urgence"}
-
-Météo dégradée en cours de vol :
-  → Retour immédiat au point de décollage dès que les conditions passent sous les seuils
-  → Seuils d'interruption : vent > 8 m/s, rafales > 10 m/s, visibilité < 3 km
-  → Atterrissage d'urgence si retour impossible avant conditions critiques
-
-Intrusion dans la zone opérationnelle :
-  → Interruption immédiate de la mission
-  → Mise en vol stationnaire à l'altitude de sécurité
-  → Attente de dégagement de la zone ou atterrissage d'urgence contrôlé
-
-Batterie critique (< 20%) :
-  → Retour immédiat au point de décollage
-  → Atterrissage d'urgence si retour impossible
-  → Log de l'incident dans le registre de vol
-
-═══════════════════════════════════════════════════════════════
-SECTION 7 — PROCÉDURES D'URGENCE
-═══════════════════════════════════════════════════════════════
-
-Contact urgence : ${d.contactUrgenceNom || "[À compléter]"} — ${d.contactUrgenceTel || "[À compléter]"} (${d.contactUrgenceRole || "[rôle]"})
-Urgences publiques : 15 (SAMU), 17 (Police), 18 (Pompiers), 112 (Urgences Europe)
-
-7.1 — Panne moteur / perte de contrôle totale
-  1. Activer immédiatement le FTS si équipé
-  2. Tenter de reprendre le contrôle manuel
-  3. Guider l'UAS vers une zone dégagée si possible
-  4. Alerter les personnes au sol
-  5. Sécuriser la zone d'impact
-  6. Appeler les secours si blessés ou dommages matériels
-  7. Rédiger rapport d'incident dans les 24h
-
-7.2 — Incendie de batterie au sol
-  1. Éloigner les personnes (périmètre de sécurité 10 m)
-  2. NE PAS tenter d'éteindre avec de l'eau
-  3. Utiliser un extincteur CO2 ou un sac ignifuge LiPo
-  4. Appeler les pompiers (18) si incendie non maîtrisé
-  5. Documenter l'incident
-
-7.3 — Accident avec blessés
-  1. Alerter les secours (15 ou 112)
-  2. Ne pas déplacer les blessés sauf danger immédiat
-  3. Sécuriser la zone
-  4. Préserver les preuves (drone, enregistrements)
-  5. Contacter l'assurance dans les 24h
-  6. Déclarer l'accident à la DGAC (AlphaTango) dans les 72h
-
-7.4 — Violation d'espace aérien involontaire
-  1. Retour immédiat hors de la zone
-  2. Atterrissage dès que possible
-  3. Contacter le contrôle aérien local si possible
-  4. Documenter l'incident et déclarer à la DGAC
-
-═══════════════════════════════════════════════════════════════
-SECTION 8 — ÉVALUATION DES RISQUES
-═══════════════════════════════════════════════════════════════
-
-Méthodologie : SORA (Specific Operations Risk Assessment) — SAIL II
-
-Risques identifiés :
-  1. Collision avec des personnes au sol
-     Probabilité : Moyenne | Gravité : Élevée | Atténuation : GRB ${d.grbDistance}m, assurance RC
-  2. Conflit avec le trafic aérien
-     Probabilité : Faible | Gravité : Critique | Atténuation : vérification espace aérien, signalement
-  3. Perte de contrôle de l'UAS
-     Probabilité : Faible | Gravité : Élevée | Atténuation : maintenance, procédures d'urgence
-  4. Conditions météo défavorables
-     Probabilité : Moyenne | Gravité : Moyenne | Atténuation : vérification météo obligatoire pré-vol
-  5. Défaillance technique (batterie, moteur)
-     Probabilité : Faible | Gravité : Élevée | Atténuation : inspection pré-vol, FTS, parachute
-
-═══════════════════════════════════════════════════════════════
-SECTION 9 — FACTEURS HUMAINS
-═══════════════════════════════════════════════════════════════
-
-Le RPIC s'engage à :
-  - Ne pas opérer en cas de fatigue (moins de 6h de sommeil)
-  - Ne pas opérer sous l'influence de médicaments altérant la vigilance
-  - Ne pas opérer en cas d'état de stress ou de trouble émotionnel significatif
-  - Effectuer un bilan de forme avant chaque mission longue
-  - Signaler toute condition médicale pouvant affecter les capacités de pilotage
-  - Respecter les pauses (maximum 4h de vol continu)
-
-═══════════════════════════════════════════════════════════════
-SECTION 10 — PLAN D'INTERVENTION D'URGENCE (EUP)
-═══════════════════════════════════════════════════════════════
-
-En cas d'urgence majeure :
-  1. Sécuriser les personnes (évacuation de la zone)
-  2. Appeler les secours appropriés
-  3. Notifier ${d.contactUrgenceNom || "le contact d'urgence"} au ${d.contactUrgenceTel || "[numéro]"}
-  4. Sécuriser et préserver les équipements et enregistrements
-  5. Coopérer avec les autorités
-  6. Rédiger un rapport complet dans les 24h
-  7. Déclaration à la DGAC via AlphaTango si requis
-
-═══════════════════════════════════════════════════════════════
-SECTION 11 — DÉCLARATION DE CONFORMITÉ
-═══════════════════════════════════════════════════════════════
-
-Je soussigné(e) ${d.operateurNom || "[Opérateur]"}, représentant légal de la société, atteste que :
-
-  ✓ Le présent MANEX est conforme aux exigences du Règlement (UE) 2019/947, Annexe — ${d.scenario}
-  ✓ Le système UAS ${d.uasMarque} ${d.uasModele} est conforme à la classe ${d.uasClasse} EASA
-  ✓ L'opérateur est enregistré sur AlphaTango avec un numéro valide
-  ✓ Le RPIC détient les qualifications requises pour le scénario ${d.scenario}
-  ✓ Ce document sera soumis à la DGAC lors de toute déclaration de vol spécifique
-  ✓ Ce MANEX sera révisé au minimum une fois par an ou après tout incident significatif
-
-Fait à _________________, le ${today}
-
-Signature de l'opérateur : _______________________
-${d.operateurNom || "[Nom de l'opérateur]"}
-
-─────────────────────────────────────────────────────────────
-⚠️  AVERTISSEMENT : Ce document est un modèle basé sur AMC1 UAS.STS-01/02.020 (EASA).
-Il doit être adapté à votre activité spécifique avant dépôt sur AlphaTango.
-Consultez un conseiller réglementaire qualifié si nécessaire.
-─────────────────────────────────────────────────────────────
-Références réglementaires : Règlement (UE) 2019/947 | AMC & GM Part-UAS | Easy Access Rules UAS (EASA, juillet 2024)
-Généré par CertifDrone.fr — contact@certifdrone.fr
-`;
+function Select({
+  label, sublabel, value, onChange, options,
+}: {
+  label: string; sublabel?: string; value: string;
+  onChange: (v: string) => void; options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+      {sublabel && <p className="text-xs text-gray-500 mb-1">{sublabel}</p>}
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+      >
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+    </div>
+  );
 }
 
-const STEP_TITLES = ["Opérateur", "Télépilote RPIC", "Système UAS", "Opération", "Contacts urgence"];
+function Textarea({
+  label, sublabel, value, onChange, placeholder, rows = 3,
+}: {
+  label: string; sublabel?: string; value: string;
+  onChange: (v: string) => void; placeholder?: string; rows?: number;
+}) {
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-semibold text-gray-700 mb-1">{label}</label>
+      {sublabel && <p className="text-xs text-gray-500 mb-1">{sublabel}</p>}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+      />
+    </div>
+  );
+}
 
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center gap-3 cursor-pointer mb-4">
+      <div
+        onClick={() => onChange(!checked)}
+        className={`relative w-12 h-6 rounded-full transition-colors ${checked ? "bg-orange-500" : "bg-gray-300"}`}
+      >
+        <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : ""}`} />
+      </div>
+      <span className="text-sm font-medium text-gray-700">{label}</span>
+    </label>
+  );
+}
+
+function SectionTitle({ icon, title, sub }: { icon: string; title: string; sub?: string }) {
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">{icon}</span>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          {sub && <p className="text-sm text-gray-500">{sub}</p>}
+        </div>
+      </div>
+      <div className="border-b border-gray-200 mt-3" />
+    </div>
+  );
+}
+
+// ─── steps ────────────────────────────────────────────────────────────────────
+const STEPS = [
+  { id: 0, label: "Opérateur", icon: "🏢" },
+  { id: 1, label: "Organisation", icon: "👥" },
+  { id: 2, label: "Drones (UAS)", icon: "🚁" },
+  { id: 3, label: "Zones de vol", icon: "🗺️" },
+  { id: 4, label: "Personnel", icon: "🪪" },
+  { id: 5, label: "ERP & Urgences", icon: "🚨" },
+  { id: 6, label: "Essais & Annexes", icon: "📋" },
+  { id: 7, label: "Génération", icon: "📄" },
+];
+
+// ─── UAS sub-form ─────────────────────────────────────────────────────────────
+function UASForm({ uas, onChange, idx }: { uas: UAS; onChange: (u: UAS) => void; idx: number }) {
+  const set = (k: keyof UAS) => (v: unknown) => onChange({ ...uas, [k]: v });
+  return (
+    <div className="border border-gray-200 rounded-xl p-5 mb-4 bg-gray-50">
+      <h4 className="font-bold text-gray-800 mb-4">UAS {idx + 1}</h4>
+      <div className="grid grid-cols-2 gap-x-4">
+        <Field label="Désignation / Nom du drone" value={uas.nom} onChange={set("nom")} placeholder="Ex: DJI Mini 3 Pro" required />
+        <Field label="Fabricant" value={uas.fabricant} onChange={set("fabricant")} placeholder="Ex: DJI" />
+        <Select label="Type" value={uas.type} onChange={set("type")} options={[
+          { value: "multirotor", label: "Multi-rotor" },
+          { value: "voilure_fixe", label: "Voilure fixe" },
+        ]} />
+        <Select label="Classe EASA" value={uas.classe} onChange={set("classe")} options={[
+          "C0","C1","C2","C3","C4","C5","C6",
+        ].map(c => ({ value: c, label: c }))} />
+        <Field label="MTOM (masse totale au décollage)" value={uas.mtom} onChange={set("mtom")} placeholder="Ex: 0.249" sublabel="En kilogrammes" />
+        <Field label="Charge utile" value={uas.chargeutile} onChange={set("chargeutile")} placeholder="Ex: Caméra 4K intégrée" />
+      </div>
+      <Toggle label="Parachute installé (M2)" checked={uas.parachute} onChange={set("parachute")} />
+      {uas.parachute && (
+        <Textarea label="Description du parachute" value={uas.parachuteDesc} onChange={set("parachuteDesc")} placeholder="Marque, modèle, déclenchement..." rows={2} />
+      )}
+      <Toggle label="Système de terminaison de vol (FTS)" checked={uas.fts} onChange={set("fts")} />
+      {uas.fts && (
+        <Textarea label="Description du FTS" value={uas.ftsDesc} onChange={set("ftsDesc")} placeholder="Fonctionnement, déclenchement..." rows={2} />
+      )}
+      <Toggle label="TMPR requis" checked={uas.tmpr} onChange={set("tmpr")} />
+      <Textarea
+        label="Conditions environnementales défavorables"
+        sublabel="Limites spécifiques de l'appareil (vent, pluie, température, etc.)"
+        value={uas.conditionsEnv} onChange={set("conditionsEnv")}
+        placeholder="Ex: Vent max 10 m/s, température -10°C à 40°C, humidité max 90%"
+        rows={2}
+      />
+      <Textarea
+        label="Confinement / système de contention"
+        sublabel="Décrire comment l'UAS est maintenu dans son volume d'opération"
+        value={uas.confinement} onChange={set("confinement")}
+        placeholder="Ex: Géofencing actif, altitude limitée à 120m via firmware..."
+        rows={2}
+      />
+    </div>
+  );
+}
+
+// ─── pilote sub-form ──────────────────────────────────────────────────────────
+function PiloteForm({ p, onChange, idx }: { p: Pilote; onChange: (p: Pilote) => void; idx: number }) {
+  const set = (k: keyof Pilote) => (v: string) => onChange({ ...p, [k]: v });
+  return (
+    <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
+      <h5 className="font-semibold text-gray-700 mb-3">Pilote {idx + 1}</h5>
+      <div className="grid grid-cols-2 gap-x-4">
+        <Field label="Nom complet" value={p.nom} onChange={set("nom")} placeholder="Prénom Nom" required />
+        <Field label="N° immatriculation" value={p.immatriculation} onChange={set("immatriculation")} placeholder="UAS-FR-XXXXXXXXX" />
+        <Field label="Modèles UAS autorisés" value={p.modelesUAS} onChange={set("modelesUAS")} placeholder="DJI Mini 3, Matrice 350..." />
+        <Field label="Scénarios autorisés" value={p.scenarios} onChange={set("scenarios")} placeholder="S1, S2, STS-01, STS-02" />
+        <Field label="Qualification" value={p.qualification} onChange={set("qualification")} placeholder="BAPD, CATS STS-01..." />
+        <Field label="Expérience (heures de vol)" value={p.experience} onChange={set("experience")} placeholder="150" type="number" />
+        <Field label="Date début autorisation" value={p.dateDebut} onChange={set("dateDebut")} type="date" />
+        <Field label="Date fin autorisation" value={p.dateFin} onChange={set("dateFin")} type="date" />
+      </div>
+    </div>
+  );
+}
+
+// ─── maintenance sub-form ────────────────────────────────────────────────────
+function MaintenanceForm({ p, onChange, idx, title }: { p: PersonnelMaintenance; onChange: (p: PersonnelMaintenance) => void; idx: number; title: string }) {
+  const set = (k: keyof PersonnelMaintenance) => (v: string) => onChange({ ...p, [k]: v });
+  return (
+    <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
+      <h5 className="font-semibold text-gray-700 mb-3">{title} {idx + 1}</h5>
+      <div className="grid grid-cols-2 gap-x-4">
+        <Field label="Nom complet" value={p.nom} onChange={set("nom")} placeholder="Prénom Nom" />
+        <Field label="Modèles UAS" value={p.modelesUAS} onChange={set("modelesUAS")} placeholder="DJI Mini 3, Matrice 350..." />
+        <Field label="Type autorisation" value={p.typeAutorisation} onChange={set("typeAutorisation")} placeholder="Permanente / Limitée..." />
+        <Field label="Date début" value={p.dateDebut} onChange={set("dateDebut")} type="date" />
+        <Field label="Date fin" value={p.dateFin} onChange={set("dateFin")} type="date" />
+      </div>
+    </div>
+  );
+}
+
+// ─── essai sub-form ───────────────────────────────────────────────────────────
+function EssaiForm({ e, onChange, idx }: { e: EssaiVol; onChange: (e: EssaiVol) => void; idx: number }) {
+  const set = (k: keyof EssaiVol) => (v: string) => onChange({ ...e, [k]: v });
+  return (
+    <div className="border border-gray-200 rounded-xl p-4 mb-3 bg-gray-50">
+      <h5 className="font-semibold text-gray-700 mb-3">Essai {idx + 1}</h5>
+      <div className="grid grid-cols-2 gap-x-4">
+        <Field label="Date" value={e.date} onChange={set("date")} type="date" />
+        <Field label="Référence" value={e.reference} onChange={set("reference")} placeholder="S01-01-001" />
+        <Select label="Type" value={e.type} onChange={(v) => onChange({ ...e, type: v as "Simulé" | "Réel" })} options={[
+          { value: "Simulé", label: "Simulé" },
+          { value: "Réel", label: "Réel" },
+        ]} />
+        <Field label="Nombre de tests" value={e.nombre} onChange={set("nombre")} placeholder="3" type="number" />
+        <Field label="Résultat" value={e.resultat} onChange={set("resultat")} placeholder="3/3 réussi" />
+      </div>
+    </div>
+  );
+}
+
+// ─── main ──────────────────────────────────────────────────────────────────────
 export default function ManexPage() {
   const [step, setStep] = useState(0);
-  const [form, setForm] = useState<FormData>(EMPTY);
-  const [generated, setGenerated] = useState(false);
-  const [manexText, setManexText] = useState("");
+  const [data, setData] = useState<ManexData>({ ...EMPTY_MANEX });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const set = (id: keyof FormData, v: string | boolean) => setForm(f => ({ ...f, [id]: v }));
+  const set = (k: keyof ManexData) => (v: unknown) =>
+    setData((prev) => ({ ...prev, [k]: v }));
 
-  const generate = () => {
-    const text = buildManex(form);
-    setManexText(text);
-    setGenerated(true);
+  // ── add/remove list helpers ────────────────────────────────────────────────
+  const addUAS = () => setData(d => ({ ...d, uas: [...d.uas, { ...EMPTY_UAS }] }));
+  const removeUAS = (i: number) => setData(d => ({ ...d, uas: d.uas.filter((_, idx) => idx !== i) }));
+  const updateUAS = (i: number, u: UAS) => setData(d => ({ ...d, uas: d.uas.map((x, idx) => idx === i ? u : x) }));
+
+  const addPilote = () => setData(d => ({ ...d, pilotes: [...d.pilotes, { ...EMPTY_PILOTE }] }));
+  const removePilote = (i: number) => setData(d => ({ ...d, pilotes: d.pilotes.filter((_, idx) => idx !== i) }));
+  const updatePilote = (i: number, p: Pilote) => setData(d => ({ ...d, pilotes: d.pilotes.map((x, idx) => idx === i ? p : x) }));
+
+  const addMaintenance = () => setData(d => ({ ...d, personnelMaintenance: [...d.personnelMaintenance, { ...EMPTY_MAINTENANCE }] }));
+  const removeMaintenance = (i: number) => setData(d => ({ ...d, personnelMaintenance: d.personnelMaintenance.filter((_, idx) => idx !== i) }));
+  const updateMaintenance = (i: number, p: PersonnelMaintenance) => setData(d => ({ ...d, personnelMaintenance: d.personnelMaintenance.map((x, idx) => idx === i ? p : x) }));
+
+  const addInspection = () => setData(d => ({ ...d, personnelInspection: [...d.personnelInspection, { ...EMPTY_MAINTENANCE }] }));
+  const removeInspection = (i: number) => setData(d => ({ ...d, personnelInspection: d.personnelInspection.filter((_, idx) => idx !== i) }));
+  const updateInspection = (i: number, p: PersonnelMaintenance) => setData(d => ({ ...d, personnelInspection: d.personnelInspection.map((x, idx) => idx === i ? p : x) }));
+
+  const addEssai = () => setData(d => ({ ...d, essaisVol: [...d.essaisVol, { ...EMPTY_ESSAI }] }));
+  const removeEssai = (i: number) => setData(d => ({ ...d, essaisVol: d.essaisVol.filter((_, idx) => idx !== i) }));
+  const updateEssai = (i: number, e: EssaiVol) => setData(d => ({ ...d, essaisVol: d.essaisVol.map((x, idx) => idx === i ? e : x) }));
+
+  // ── generate PDF ─────────────────────────────────────────────────────────
+  const generate = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/generate-manex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const e = await res.json();
+        throw new Error(e.error || "Erreur serveur");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `MANEX_${(data.operateurNom || "operateur").replace(/\s+/g, "_")}_Rev0.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const download = () => {
-    const blob = new Blob([manexText], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `MANEX_${form.operateurNom.replace(/\s+/g, "_") || "drone"}_${form.scenario}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  if (generated) {
-    return (
-      <div className="min-h-screen bg-white font-sans">
-        <Nav />
-        <main className="pt-16 max-w-4xl mx-auto px-4 py-12">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Votre MANEX — {form.scenario}</h1>
-            <div className="flex gap-3">
-              <button onClick={() => setGenerated(false)} className="px-4 py-2 border border-gray-300 rounded-full text-sm hover:bg-gray-50 transition-colors">← Modifier</button>
-              <button onClick={download} className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors text-sm">⬇ Télécharger .txt</button>
-            </div>
-          </div>
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
-            ⚠️ Modèle basé sur AMC1 UAS.STS-01/02.020 (EASA). À adapter à votre activité spécifique avant dépôt sur AlphaTango.
-          </div>
-          <pre className="bg-gray-900 text-green-300 rounded-xl p-6 text-xs overflow-auto whitespace-pre-wrap font-mono leading-relaxed max-h-[70vh]">{manexText}</pre>
-        </main>
-      </div>
-    );
-  }
-
+  // ── render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white font-sans">
-      <Nav />
-      <main className="pt-16">
-
-        {/* Hero */}
-        <section className="bg-gradient-to-br from-blue-50 to-white py-16 px-4">
-          <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center gap-12">
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                Votre <span className="text-orange-500">Manuel d&apos;exploitation</span> drone rédigé pour <span className="text-orange-500">199€</span>
-              </h1>
-              <p className="text-gray-600 mb-6">La façon la plus simple et abordable pour obtenir votre MANEX en 72h.</p>
-              <button onClick={() => document.getElementById("form-section")?.scrollIntoView({ behavior: "smooth" })}
-                className="inline-block bg-orange-500 text-white font-semibold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors shadow-md">Générer mon MANEX</button>
-            </div>
-            <div className="flex-1 max-w-sm w-full bg-white rounded-2xl shadow-xl border-2 border-blue-100 p-6">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded">EASA</div>
-                <div className="ml-2 text-xs text-gray-500">European Union Aviation Safety Agency</div>
-              </div>
-              <p className="text-xs text-center text-gray-600 mb-3">Manuel d&apos;exploitation / OM pour l&apos;exploitation dans SAIL II de systèmes d&apos;avions sans pilote (UAS)</p>
-              <ul className="text-xs text-gray-700 space-y-2">
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Format du Manex modifiable pour garder la main</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Un Manex conforme aux exigences EASA</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Une équipe joignable et à votre écoute</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Obligatoire pour les exploitants drone</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>10 min pour saisir vos informations</li>
-                <li className="flex items-center gap-2"><span className="text-green-500">✓</span>Scénarios STS01 et STS02</li>
-              </ul>
-              <div className="mt-4 text-center">
-                <span className="text-3xl font-extrabold text-orange-500">199€</span>
-                <span className="text-gray-400 text-sm ml-1">TTC</span>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gray-50 pt-20">
+      {/* Hero */}
+      <div className="bg-gradient-to-b from-gray-900 to-gray-800 text-white py-10 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+            ✦ SAIL II — Conforme EASA EU 2019/947
           </div>
-        </section>
+          <h1 className="text-3xl font-black mb-3">Générateur de MANEX</h1>
+          <p className="text-gray-300 text-sm max-w-xl mx-auto">
+            Répondez aux questions étape par étape. Votre Manuel d&apos;Exploitation complet sera généré automatiquement en PDF, conforme au modèle EASA (84 pages).
+          </p>
+        </div>
+      </div>
 
-        {/* Pourquoi un MANEX */}
-        <section className="py-16 px-4 bg-white">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Votre Manuel d&apos;exploitation drone rédigé pour <span className="text-orange-500">199€</span></h2>
-
-            <div className="grid md:grid-cols-3 gap-6 mt-8">
-              {[
-                { title: "Conforme :", sub: "NORMES EASA", desc: "Nos MANEX respectent toutes les exigences de l'EASA et des scénarios européens STS01 et STS02." },
-                { title: "Modifiable :", sub: "GARDEZ LE CONTRÔLE", desc: "Recevez votre MANEX au format PDF et Word, prêt à être utilisé et adapté si nécessaire." },
-                { title: "Expertise :", sub: "UN GAGE DE SÉRIEUX ET DE QUALITÉ", desc: "CertifDrone.fr, leader de la préparation et du passage d'examens drone en France, propose des MANEX personnalisés et conformes aux normes initiées par l'EASA." },
-              ].map(c => (
-                <div key={c.title} className="bg-gray-50 rounded-xl p-5">
-                  <h3 className="text-xl font-bold text-gray-900">{c.title}</h3>
-                  <p className="text-xs font-semibold text-orange-500 mb-2">{c.sub}</p>
-                  <p className="text-sm text-gray-600">{c.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-10">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Comment rédiger un MANEX Drone ?</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  { step: "1", title: "Remplissez le Formulaire", desc: "Remplissez notre formulaire en ligne en quelques minutes et recevez un MANEX complet et adapté à votre exploitation." },
-                  { step: "2", title: "Paiement Sécurisé", desc: "Effectuez votre paiement en toute sécurité via Stripe. Plusieurs facilités de paiement disponibles directement sur votre interface sécurisée." },
-                  { step: "3", title: "Recevez Votre MANEX", desc: "Sous 72h, recevez votre MANEX personnalisé par email. Formats PDF et Word modifiables inclus." },
-                ].map(s => (
-                  <div key={s.step} className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold flex-shrink-0 text-sm">{s.step}</div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 mb-1">{s.title}</h4>
-                      <p className="text-sm text-gray-600">{s.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-10">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Ce que comprend votre MANEX conforme aux normes EASA</h3>
-              <ul className="grid md:grid-cols-2 gap-3 text-sm text-gray-700">
-                {[
-                  "Informations sur l'Opérateur — Détails complets sur l'identité et les coordonnées de l'opérateur de drone.",
-                  "Déclarations Légales et Conformité — Engagement à respecter les réglementations de l'EASA et assurer la sécurité des données.",
-                  "Structure Organisationnelle — Description des rôles et responsabilités au sein de l'organisation.",
-                  "Qualifications et Exigences du Personnel — Certifications et formations requises.",
-                  "Procédures d'Opération — Planification, exécution et gestion des vols.",
-                  "Zones de Vol et Limites Opérationnelles — Définition des zones autorisées.",
-                  "Gestion de la Sécurité — Surveillance et gestion des risques.",
-                  "Maintenance et Entretien des Drones — Procédures d'entretien régulier.",
-                  "Plan d'Intervention d'Urgence (EUP) — Gestion des situations d'urgence.",
-                ].map(item => (
-                  <li key={item} className="flex gap-2 bg-gray-50 rounded-lg p-3">
-                    <span className="text-orange-500 flex-shrink-0">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* Formulaire */}
-        <section id="form-section" className="py-16 px-4 bg-gray-50">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Générer votre MANEX gratuitement</h2>
-            <p className="text-gray-500 text-sm mb-8">Remplissez les informations pour obtenir votre MANEX personnalisé conforme EASA.</p>
-
-            {/* Progress */}
-            <div className="flex items-center gap-2 mb-8">
-              {STEP_TITLES.map((t, i) => (
-                <div key={i} className="flex items-center gap-1 flex-1">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i <= step ? "bg-orange-500 text-white" : "bg-gray-200 text-gray-400"}`}>{i + 1}</div>
-                  <span className={`text-xs hidden sm:block ${i === step ? "text-orange-500 font-semibold" : "text-gray-400"}`}>{t}</span>
-                  {i < 4 && <div className="h-0.5 bg-gray-200 flex-1" />}
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
-              {step === 0 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">1. Informations sur l&apos;opérateur</h3>
-                  <F label="Raison sociale / Nom de l'opérateur *" id="operateurNom" value={form.operateurNom} onChange={set} placeholder="Société Dupont Aérien SAS" />
-                  <F label="N° SIREN / Enregistrement AlphaTango" id="operateurSiren" value={form.operateurSiren} onChange={set} placeholder="123 456 789" />
-                  <F label="Adresse du siège social" id="operateurAdresse" value={form.operateurAdresse} onChange={set} placeholder="15 rue de la Paix, 75001 Paris" />
-                  <F label="Email de contact" id="operateurEmail" value={form.operateurEmail} onChange={set} placeholder="contact@societe.fr" type="email" />
-                  <F label="Téléphone" id="operateurTel" value={form.operateurTel} onChange={set} placeholder="+33 6 12 34 56 78" />
-                </div>
-              )}
-              {step === 1 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">2. Télépilote responsable (RPIC)</h3>
-                  <F label="Nom et prénom du RPIC *" id="rpicNom" value={form.rpicNom} onChange={set} placeholder="Jean Dupont" />
-                  <F label="N° de brevet / certificat CATS" id="rpicBrevet" value={form.rpicBrevet} onChange={set} placeholder="CATS-2024-XXXXX" />
-                  <F label="Expérience de vol (heures)" id="rpicExperience" value={form.rpicExperience} onChange={set} placeholder="150" type="number" />
-                </div>
-              )}
-              {step === 2 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">3. Système UAS</h3>
-                  <F label="Fabricant / Marque *" id="uasMarque" value={form.uasMarque} onChange={set} placeholder="DJI, Delair, etc." />
-                  <F label="Modèle *" id="uasModele" value={form.uasModele} onChange={set} placeholder="Matrice 350 RTK" />
-                  <F label="Numéro de série" id="uasNumeroSerie" value={form.uasNumeroSerie} onChange={set} placeholder="SN-XXXXXXXXXX" />
-                  <F label="Masse au décollage (kg)" id="uasMasse" value={form.uasMasse} onChange={set} placeholder="6.5" type="number" />
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">Classe EASA</label>
-                    <select value={form.uasClasse} onChange={e => set("uasClasse", e.target.value)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
-                      <option value="C5">C5 — STS-01 (zones peuplées)</option>
-                      <option value="C6">C6 — STS-02 (BVLOS, zones peu peuplées)</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={form.uasParachute} onChange={e => set("uasParachute", e.target.checked)} className="w-4 h-4 accent-orange-500" />
-                      Parachute homologué
-                    </label>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={form.uasFts} onChange={e => set("uasFts", e.target.checked)} className="w-4 h-4 accent-orange-500" />
-                      Système de fin de vol (FTS)
-                    </label>
-                  </div>
-                </div>
-              )}
-              {step === 3 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">4. Description de l&apos;opération</h3>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">Scénario standard</label>
-                    <select value={form.scenario} onChange={e => set("scenario", e.target.value)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400">
-                      <option value="STS-01">STS-01 — Zones urbaines peuplées (C5, VLOS, &lt;120m)</option>
-                      <option value="STS-02">STS-02 — Zones peu peuplées (C6, BVLOS, &lt;120m)</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-sm font-medium text-gray-700">Description de la zone opérationnelle</label>
-                    <textarea value={form.zoneDescription} onChange={e => set("zoneDescription", e.target.value)}
-                      placeholder="Ex: Zone industrielle, centre-ville Lyon, chantier BTP..."
-                      rows={3} className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400" />
-                  </div>
-                  <F label="Hauteur maximale de vol (m AGL)" id="hauteurMax" value={form.hauteurMax} onChange={set} placeholder="120" type="number" />
-                  <F label="Distance zone tampon GRB (m)" id="grbDistance" value={form.grbDistance} onChange={set} placeholder="30" type="number" />
-                </div>
-              )}
-              {step === 4 && (
-                <div className="space-y-4">
-                  <h3 className="font-bold text-gray-900 text-lg mb-4">5. Contact d&apos;urgence</h3>
-                  <F label="Nom et prénom *" id="contactUrgenceNom" value={form.contactUrgenceNom} onChange={set} placeholder="Marie Dupont" />
-                  <F label="Téléphone d'urgence *" id="contactUrgenceTel" value={form.contactUrgenceTel} onChange={set} placeholder="+33 6 98 76 54 32" />
-                  <F label="Rôle / Fonction" id="contactUrgenceRole" value={form.contactUrgenceRole} onChange={set} placeholder="Directeur des opérations" />
-                  <div className="bg-orange-50 rounded-xl p-4 mt-4">
-                    <p className="text-sm text-orange-700 font-medium">✓ Prêt à générer votre MANEX complet</p>
-                    <p className="text-xs text-orange-600 mt-1">Vérifiez vos informations avant de générer le document.</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation */}
-              <div className="flex justify-between mt-8 pt-4 border-t border-gray-100">
-                {step > 0
-                  ? <button onClick={() => setStep(s => s - 1)} className="px-6 py-2 border border-gray-300 rounded-full text-sm text-gray-600 hover:bg-gray-50 transition-colors">← Précédent</button>
-                  : <div />
-                }
-                {step < 4
-                  ? <button onClick={() => setStep(s => s + 1)} className="px-6 py-2 bg-orange-500 text-white font-semibold rounded-full hover:bg-orange-600 transition-colors text-sm">Suivant →</button>
-                  : <button onClick={generate} className="px-8 py-2 bg-green-600 text-white font-bold rounded-full hover:bg-green-700 transition-colors text-sm">Générer le MANEX ✓</button>
-                }
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Pourquoi */}
-        <section className="py-16 px-4 bg-white">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">Pourquoi un MANEX personnalisé ?</h2>
-            <div className="grid md:grid-cols-3 gap-6">
-              {[
-                { icon: "🔒", title: "Sécurité :", desc: "Garantit une exploitation sécurisée de vos drones." },
-                { icon: "✅", title: "Conformité :", desc: "Respecte les normes et réglementations drone en vigueur." },
-                { icon: "⚡", title: "Efficacité :", desc: "Plus besoin de rechercher pendant des heures un exemple de Manex pour votre exploitation drone. Simplifiez vos opérations quotidiennes et la gestion des risques." },
-              ].map(c => (
-                <div key={c.title} className="bg-gray-50 rounded-xl p-5">
-                  <div className="text-2xl mb-2">{c.icon}</div>
-                  <h3 className="font-bold text-gray-900 mb-1">{c.title}</h3>
-                  <p className="text-sm text-gray-600">{c.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Le MANEX drone */}
-        <section className="py-12 px-4 bg-gray-50">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Le MANEX drone</h2>
-            <p className="text-gray-700 text-sm mb-4">
-              Le MANEX est un document incontournable pour les exploitants en catégorie spécifique. Il doit être rédigé avec soin.
-            </p>
-            <p className="text-sm text-gray-600 mb-6">
-              N&apos;hésitez pas à nous joindre, nous sommes là pour vous. Obtenez votre MANEX personnalisé maintenant. Commandez dès aujourd&apos;hui et assurez-vous une exploitation sécurisée et conforme.
-            </p>
-            <button onClick={() => document.getElementById("form-section")?.scrollIntoView({ behavior: "smooth" })}
-              className="inline-block bg-orange-500 text-white font-bold px-8 py-3 rounded-full hover:bg-orange-600 transition-colors">
-              Commencer maintenant
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        {/* Progress */}
+        <div className="flex items-center gap-1 mb-8 overflow-x-auto pb-2">
+          {STEPS.map((s, i) => (
+            <button
+              key={s.id}
+              onClick={() => setStep(i)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                i === step ? "bg-orange-500 text-white shadow-md" :
+                i < step ? "bg-green-100 text-green-700" :
+                "bg-gray-200 text-gray-500"
+              }`}
+            >
+              <span>{s.icon}</span>
+              <span className="hidden sm:inline">{s.label}</span>
+              {i < step && <span>✓</span>}
             </button>
-          </div>
-        </section>
+          ))}
+        </div>
 
-        <footer className="bg-white border-t border-gray-200 py-8 px-4">
-          <div className="max-w-5xl mx-auto flex flex-wrap justify-between gap-4 text-sm text-gray-500">
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {["FAQ", "CGV – CGU", "CGV – CGU Partenaire", "Données personnelles", "Handicap", "Actualités", "Plan du site"].map(l => (
-                <a key={l} href="#" className="hover:text-orange-500 transition-colors">{l}</a>
+        {/* Form card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
+
+          {/* ── STEP 0: Opérateur ── */}
+          {step === 0 && (
+            <>
+              <SectionTitle icon="🏢" title="Informations de l&apos;opérateur" sub="Ces données figureront sur la page de couverture du MANEX" />
+              <div className="grid grid-cols-2 gap-x-4">
+                <div className="col-span-2">
+                  <Field label="Nom de l'opérateur / Raison sociale" value={data.operateurNom} onChange={set("operateurNom")} placeholder="ACME Drone SAS" required />
+                </div>
+                <Field label="SIRET" value={data.operateurSiret} onChange={set("operateurSiret")} placeholder="83987009400027" required />
+                <Field label="N° AlphaTango" value={data.operateurNumAlphaTango} onChange={set("operateurNumAlphaTango")} placeholder="FRAxxxxxxxxx" sublabel="Identifiant DGAC (alphaTango.fr)" required />
+                <div className="col-span-2">
+                  <Field label="Adresse" value={data.operateurAdresse} onChange={set("operateurAdresse")} placeholder="139 impasse de l'Église" required />
+                </div>
+                <Field label="Code postal" value={data.operateurCodePostal} onChange={set("operateurCodePostal")} placeholder="76970" />
+                <Field label="Ville" value={data.operateurVille} onChange={set("operateurVille")} placeholder="Gremonville" />
+                <Field label="Pays" value={data.operateurPays} onChange={set("operateurPays")} placeholder="France" />
+                <Field label="E-mail" value={data.operateurEmail} onChange={set("operateurEmail")} placeholder="contact@maSociete.fr" type="email" />
+                <div className="col-span-2">
+                  <Field label="Téléphone" value={data.operateurTel} onChange={set("operateurTel")} placeholder="+33 6 00 00 00 00" />
+                </div>
+                <Field label="Date de création du MANEX" value={data.dateCreation} onChange={set("dateCreation")} type="date" />
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 1: Organisation ── */}
+          {step === 1 && (
+            <>
+              <SectionTitle icon="👥" title="Organisation de la société" sub="Section 1.4 du MANEX — Description et organigramme" />
+              <div className="grid grid-cols-2 gap-x-4">
+                <Field label="Année de fondation" value={data.societeAnneeCreation} onChange={set("societeAnneeCreation")} placeholder="2024" />
+                <div className="col-span-2">
+                  <Field
+                    label="Domaines d'activité"
+                    sublabel="Liste les activités séparées par des virgules"
+                    value={data.societeDomaineActivite}
+                    onChange={set("societeDomaineActivite")}
+                    placeholder="Prises de vue aériennes, Inspections techniques, Agriculture..."
+                  />
+                </div>
+              </div>
+              <Textarea
+                label="Description de la société"
+                sublabel="Quelques phrases décrivant l'entreprise et ses missions"
+                value={data.societeDescription}
+                onChange={set("societeDescription")}
+                placeholder="Notre société est spécialisée dans... Nous intervenons principalement dans..."
+                rows={4}
+              />
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-5">
+                <p className="text-xs text-blue-700 font-medium mb-3">📌 Organigramme — les rôles peuvent être cumulés par une même personne</p>
+                <div className="grid grid-cols-2 gap-x-4">
+                  {[
+                    ["Accountable Manager", "accountableManager", "Gestionnaire responsable"],
+                    ["Safety Manager", "safetyManager", "Responsable sécurité"],
+                    ["Maintenance / Technique", "maintenanceManager", "Responsable technique"],
+                    ["Opérations de vol", "flightOpsManager", "Chef des opérations"],
+                    ["Formation", "trainingManager", "Responsable formation"],
+                  ].map(([label, key, placeholder]) => (
+                    <Field
+                      key={key}
+                      label={label}
+                      value={data[key as keyof ManexData] as string}
+                      onChange={set(key as keyof ManexData)}
+                      placeholder={placeholder}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const name = data.accountableManager || data.operateurNom;
+                    setData(d => ({
+                      ...d,
+                      safetyManager: name, maintenanceManager: name,
+                      flightOpsManager: name, trainingManager: name,
+                    }));
+                  }}
+                  className="text-xs text-blue-600 underline mt-1"
+                >
+                  Remplir tous les rôles avec le nom de l&apos;Accountable Manager
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 2: UAS ── */}
+          {step === 2 && (
+            <>
+              <SectionTitle icon="🚁" title="Systèmes UAS (drones)" sub="Partie T du MANEX — jusqu'à 4 drones" />
+              {data.uas.map((u, i) => (
+                <div key={i} className="relative">
+                  <UASForm uas={u} onChange={(v) => updateUAS(i, v)} idx={i} />
+                  {data.uas.length > 1 && (
+                    <button onClick={() => removeUAS(i)} className="absolute top-4 right-4 text-red-400 hover:text-red-600 text-xs">
+                      ✕ Supprimer
+                    </button>
+                  )}
+                </div>
               ))}
-            </div>
-            <p className="text-xs text-gray-400">contact@certifdrone.fr · Mentions légales · copyright 2026</p>
-          </div>
-        </footer>
-      </main>
+              {data.uas.length < 4 && (
+                <button
+                  onClick={addUAS}
+                  className="w-full border-2 border-dashed border-orange-300 rounded-xl py-3 text-orange-500 font-semibold text-sm hover:bg-orange-50 transition-colors"
+                >
+                  + Ajouter un drone
+                </button>
+              )}
+            </>
+          )}
+
+          {/* ── STEP 3: Zones de vol ── */}
+          {step === 3 && (
+            <>
+              <SectionTitle icon="🗺️" title="Zones de vol" sub="Partie C du MANEX — définir les zones opérationnelles et scénarios" />
+
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-5">
+                <p className="text-xs font-semibold text-orange-700 mb-1">Limites opérationnelles générales</p>
+                <div className="grid grid-cols-3 gap-x-4">
+                  <Field label="Vent max (m/s)" value={data.zone1VentMax} onChange={set("zone1VentMax")} placeholder="8" />
+                  <Field label="Visibilité min (km)" value={data.zone1VisibiliteMin} onChange={set("zone1VisibiliteMin")} placeholder="5" />
+                  <Field label="Température min (°C)" value={data.zone1TempMin} onChange={set("zone1TempMin")} placeholder="-10" />
+                  <Field label="Température max (°C)" value={data.zone1TempMax} onChange={set("zone1TempMax")} placeholder="40" />
+                </div>
+              </div>
+
+              <h3 className="font-bold text-gray-800 mb-3">Zone de vol 1 (principale)</h3>
+              <div className="grid grid-cols-2 gap-x-4">
+                <Select label="Scénario" value={data.zone1Scenario} onChange={set("zone1Scenario")} options={[
+                  { value: "STS-01", label: "STS-01 (C5 · Zones peuplées · VLOS)" },
+                  { value: "STS-02", label: "STS-02 (C6 · Zones peu peuplées · BVLOS)" },
+                  { value: "OPEN-A1", label: "OPEN A1 (< 250g · au-dessus de personnes)" },
+                  { value: "OPEN-A2", label: "OPEN A2 (C2 · maintien distance)" },
+                  { value: "OPEN-A3", label: "OPEN A3 (loin de personnes)" },
+                ]} />
+                <Select label="GRC (Ground Risk Class)" value={data.zone1GRC} onChange={set("zone1GRC")} options={[
+                  "GRC1","GRC2","GRC3","GRC4","GRC5","GRC6","GRC7",
+                ].map(g => ({ value: g, label: g }))} />
+                <Select label="ARC (Air Risk Class)" value={data.zone1ARC} onChange={set("zone1ARC")} options={[
+                  { value: "ARC-a", label: "ARC-a (risque minimal)" },
+                  { value: "ARC-b", label: "ARC-b" },
+                  { value: "ARC-c", label: "ARC-c" },
+                  { value: "ARC-d", label: "ARC-d (risque élevé)" },
+                ]} />
+                <Field label="Hauteur max de vol (m AGL)" value={data.zone1HauteurMax} onChange={set("zone1HauteurMax")} placeholder="120" />
+                <Field label="GRB — tampon sol (m)" sublabel="Ex: 25m à 120m AGL pour MTOM > 10 kg" value={data.zone1GRB} onChange={set("zone1GRB")} placeholder="25" />
+              </div>
+              <Textarea
+                label="Description de la zone de vol 1"
+                sublabel="Localisation, nature du terrain, obstacles, activités riveraines, restrictions"
+                value={data.zone1Description}
+                onChange={set("zone1Description")}
+                placeholder="Zone rurale entre [ville A] et [ville B], terrain plat agricole. Aucune agglomération dans un rayon de 500m. Altitude du terrain : 120m NGF..."
+                rows={4}
+              />
+
+              <div className="border-t border-gray-200 pt-5 mt-3">
+                <Toggle label="Ajouter une zone de vol 2" checked={data.zone2Active} onChange={set("zone2Active")} />
+                {data.zone2Active && (
+                  <>
+                    <h3 className="font-bold text-gray-800 mb-3">Zone de vol 2</h3>
+                    <div className="grid grid-cols-2 gap-x-4">
+                      <Select label="Scénario" value={data.zone2Scenario} onChange={set("zone2Scenario")} options={[
+                        { value: "STS-01", label: "STS-01" },
+                        { value: "STS-02", label: "STS-02" },
+                        { value: "OPEN-A1", label: "OPEN A1" },
+                        { value: "OPEN-A2", label: "OPEN A2" },
+                        { value: "OPEN-A3", label: "OPEN A3" },
+                      ]} />
+                      <Field label="Hauteur max (m AGL)" value={data.zone2HauteurMax} onChange={set("zone2HauteurMax")} placeholder="120" />
+                      <Field label="GRB (m)" value={data.zone2GRB} onChange={set("zone2GRB")} placeholder="25" />
+                    </div>
+                    <Textarea label="Description zone 2" value={data.zone2Description} onChange={set("zone2Description")} placeholder="Description..." rows={3} />
+                  </>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 4: Personnel ── */}
+          {step === 4 && (
+            <>
+              <SectionTitle icon="🪪" title="Personnel autorisé" sub="Annexes 8.2.x — Pilotes, maintenance et inspections" />
+
+              <h3 className="font-bold text-gray-800 mb-3">Télépilotes autorisés (§8.2.4)</h3>
+              {data.pilotes.map((p, i) => (
+                <div key={i} className="relative">
+                  <PiloteForm p={p} onChange={(v) => updatePilote(i, v)} idx={i} />
+                  {data.pilotes.length > 1 && (
+                    <button onClick={() => removePilote(i)} className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs">✕</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addPilote} className="w-full border-2 border-dashed border-blue-300 rounded-xl py-2.5 text-blue-500 font-semibold text-sm hover:bg-blue-50 transition-colors mb-6">
+                + Ajouter un pilote
+              </button>
+
+              <h3 className="font-bold text-gray-800 mb-3">Personnel de maintenance (§8.2.1)</h3>
+              {data.personnelMaintenance.map((p, i) => (
+                <div key={i} className="relative">
+                  <MaintenanceForm p={p} onChange={(v) => updateMaintenance(i, v)} idx={i} title="Technicien maintenance" />
+                  {data.personnelMaintenance.length > 1 && (
+                    <button onClick={() => removeMaintenance(i)} className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs">✕</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addMaintenance} className="w-full border-2 border-dashed border-blue-300 rounded-xl py-2.5 text-blue-500 font-semibold text-sm hover:bg-blue-50 transition-colors mb-6">
+                + Ajouter personnel maintenance
+              </button>
+
+              <h3 className="font-bold text-gray-800 mb-3">Personnel inspections pré/post vol (§8.2.2)</h3>
+              {data.personnelInspection.map((p, i) => (
+                <div key={i} className="relative">
+                  <MaintenanceForm p={p} onChange={(v) => updateInspection(i, v)} idx={i} title="Inspecteur" />
+                  {data.personnelInspection.length > 1 && (
+                    <button onClick={() => removeInspection(i)} className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs">✕</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addInspection} className="w-full border-2 border-dashed border-blue-300 rounded-xl py-2.5 text-blue-500 font-semibold text-sm hover:bg-blue-50 transition-colors">
+                + Ajouter inspecteur
+              </button>
+            </>
+          )}
+
+          {/* ── STEP 5: ERP & urgences ── */}
+          {step === 5 && (
+            <>
+              <SectionTitle icon="🚨" title="ERP — Plan d'intervention d'urgence" sub="Section 3.2.4 & Partie E du MANEX" />
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-5">
+                <p className="text-xs text-red-700 font-semibold mb-2">⚠ Contacts d&apos;urgence locaux</p>
+                <p className="text-xs text-red-600 mb-3">À remplir pour chaque zone de vol. Ces numéros figureront dans la checklist ERP à emporter sur le terrain.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4">
+                <Field label="Aérodrome / Aéroport le plus proche" value={data.erpAerodrome} onChange={set("erpAerodrome")} placeholder="Aérodrome de Dieppe-Saint-Aubin" />
+                <Field label="Téléphone aérodrome" value={data.erpAerodromeTel} onChange={set("erpAerodromeTel")} placeholder="+33 2 35 46 09 02" />
+                <Field label="Contrôleurs ATC concernés" value={data.erpATC} onChange={set("erpATC")} placeholder="Paris Information / Brest Contrôle" />
+                <Field label="Pompiers (local)" value={data.erpPompiersTel} onChange={set("erpPompiersTel")} placeholder="112 / 18" />
+                <Field label="Police (local)" value={data.erpPoliceTel} onChange={set("erpPoliceTel")} placeholder="110 / 17" />
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-2">
+                <p className="text-xs font-semibold text-gray-600 mb-2">Contacts fixes (toujours inclus dans le PDF) :</p>
+                <p className="text-xs text-gray-500">• SAMU : 15 &nbsp;•&nbsp; Urgences Europe : 112 &nbsp;•&nbsp; Gendarmerie : 17</p>
+                <p className="text-xs text-gray-500 mt-1">• DSAC (rapports incidents) : dsac-autorisations-drones-bf@aviation-civile.gouv.fr</p>
+              </div>
+
+              <div className="mt-5">
+                <h3 className="font-bold text-gray-800 mb-2">Procédure email ERP</h3>
+                <p className="text-sm text-gray-600 mb-3">
+                  Avant chaque vol, le RPIC envoie un email au siège :{" "}
+                  <span className="font-semibold text-orange-600">{data.operateurEmail || "[email siège]"}</span>
+                  {" "}avec objet <span className="font-mono text-xs bg-gray-100 px-1 rounded">ERP, [date de vol]</span> et la photo de la checklist ERP signée.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 6: Essais & Annexes ── */}
+          {step === 6 && (
+            <>
+              <SectionTitle icon="📋" title="Essais en vol & Annexes" sub="Section 8.1 — Preuves d'essais requis pour l'autorisation" />
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-5">
+                <p className="text-xs font-semibold text-yellow-800 mb-1">📌 Essais obligatoires</p>
+                <p className="text-xs text-yellow-700">
+                  La DGAC exige des essais en vol documentés avant validation du MANEX.
+                  Distinguer les essais simulés (simulation) et réels (terrain).
+                  Format référence recommandé : <span className="font-mono">S01-01-001</span> (Scénario-UAS-N°)
+                </p>
+              </div>
+              {data.essaisVol.map((e, i) => (
+                <div key={i} className="relative">
+                  <EssaiForm e={e} onChange={(v) => updateEssai(i, v)} idx={i} />
+                  {data.essaisVol.length > 1 && (
+                    <button onClick={() => removeEssai(i)} className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs">✕</button>
+                  )}
+                </div>
+              ))}
+              <button onClick={addEssai} className="w-full border-2 border-dashed border-gray-300 rounded-xl py-2.5 text-gray-500 font-semibold text-sm hover:bg-gray-50 transition-colors mb-6">
+                + Ajouter un essai
+              </button>
+
+              <div className="border-t border-gray-200 pt-5">
+                <h3 className="font-bold text-gray-800 mb-3">Contenu des annexes générées automatiquement</h3>
+                {[
+                  ["§8.2.3", "Qualifications et expériences du personnel"],
+                  ["§8.3.1", "Modèle de liste de contrôle ERP (à compléter sur site)"],
+                  ["§8.3.3", "Liste de contrôle inspection prévol"],
+                  ["§8.3.4", "Liste de contrôle inspection après vol"],
+                  ["§8.4.1", "Référence manuels fabricant (maintenance)"],
+                  ["§8.5", "Déclaration de conformité signée"],
+                ].map(([ref, desc]) => (
+                  <div key={ref} className="flex items-center gap-3 py-2 border-b border-gray-100">
+                    <span className="text-xs font-mono text-orange-600 bg-orange-50 px-2 py-0.5 rounded flex-shrink-0">{ref}</span>
+                    <span className="text-sm text-gray-600">{desc}</span>
+                    <span className="ml-auto text-green-500 text-xs">✓ Auto</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ── STEP 7: Génération ── */}
+          {step === 7 && (
+            <>
+              <SectionTitle icon="📄" title="Générer le MANEX" sub="Récapitulatif et téléchargement PDF" />
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {[
+                  ["Opérateur", data.operateurNom, "🏢"],
+                  ["SIRET", data.operateurSiret, "🔢"],
+                  ["AlphaTango", data.operateurNumAlphaTango, "🆔"],
+                  ["Scénario(s)", `${data.zone1Scenario}${data.zone2Active ? " + " + data.zone2Scenario : ""}`, "🗺️"],
+                  ["Drones", data.uas.map(u => u.nom || u.fabricant).filter(Boolean).join(", ") || `${data.uas.length} drone(s)`, "🚁"],
+                  ["Pilotes", `${data.pilotes.filter(p => p.nom).length} pilote(s)`, "🪪"],
+                ].map(([label, value, icon]) => (
+                  <div key={label as string} className="bg-gray-50 rounded-xl p-4">
+                    <div className="text-lg mb-1">{icon}</div>
+                    <div className="text-xs text-gray-500 font-medium">{label}</div>
+                    <div className="text-sm font-semibold text-gray-800 truncate">{value || "—"}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <p className="text-sm font-semibold text-blue-800 mb-2">📄 Contenu du PDF généré</p>
+                <p className="text-xs text-blue-700">
+                  Page de couverture · Contrôle des documents · Partie A (Général, Déclarations, Organisation) ·
+                  Partie B (Procédures normales et d&apos;urgence) · Partie C (Zones de vol) ·
+                  Parties D & E (Formation, ERP) · Partie T (Fiches UAS) ·
+                  Partie M (Maintenance) · Annexes 8.1 à 8.4 (Essais, Personnel, Checklists)
+                </p>
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-sm text-red-700">
+                  ❌ Erreur : {error}
+                </div>
+              )}
+
+              <button
+                onClick={generate}
+                disabled={loading || !data.operateurNom}
+                className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl text-base transition-all flex items-center justify-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Génération en cours...
+                  </>
+                ) : (
+                  <>
+                    📄 Télécharger le MANEX PDF
+                  </>
+                )}
+              </button>
+              {!data.operateurNom && (
+                <p className="text-xs text-center text-gray-400 mt-2">Renseignez au minimum le nom de l&apos;opérateur (étape 1)</p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between mt-6">
+          <button
+            onClick={() => setStep(s => Math.max(0, s - 1))}
+            disabled={step === 0}
+            className="px-6 py-2.5 rounded-xl border border-gray-300 text-sm font-semibold text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
+          >
+            ← Précédent
+          </button>
+          {step < STEPS.length - 1 && (
+            <button
+              onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))}
+              className="px-6 py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold transition-colors"
+            >
+              Suivant →
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
